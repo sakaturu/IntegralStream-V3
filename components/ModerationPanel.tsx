@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { VideoItem, Review, VideoCategory } from '../types';
 import { LIBRARY_VERSION } from '../services/sampleData';
 
@@ -10,6 +10,7 @@ interface ModerationPanelProps {
   onReject: (videoId: string, reviewId: string) => void;
   onResetStats?: () => void;
   onResetToSource?: () => void;
+  onClearCategories?: () => void;
   onClose: () => void;
 }
 
@@ -24,6 +25,7 @@ const ModerationPanel: React.FC<ModerationPanelProps> = ({
   onReject, 
   onResetStats, 
   onResetToSource,
+  onClearCategories,
   onClose
 }) => {
   const pendingReviews = useMemo(() => {
@@ -38,7 +40,8 @@ const ModerationPanel: React.FC<ModerationPanelProps> = ({
     return list.sort((a, b) => b.timestamp - a.timestamp);
   }, [videos]);
 
-  const [confirmReset, setConfirmReset] = React.useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmClearCats, setConfirmClearCats] = useState(false);
 
   const handleResetToSource = () => {
     if (confirmReset) {
@@ -47,6 +50,15 @@ const ModerationPanel: React.FC<ModerationPanelProps> = ({
       onClose();
     } else {
       setConfirmReset(true);
+    }
+  };
+
+  const handleClearCats = () => {
+    if (confirmClearCats) {
+      onClearCategories?.();
+      setConfirmClearCats(false);
+    } else {
+      setConfirmClearCats(true);
     }
   };
 
@@ -86,15 +98,27 @@ const ModerationPanel: React.FC<ModerationPanelProps> = ({
               </div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Queue Purged</h3>
               <div className="mt-8 pt-8 border-t border-white/5 w-full flex flex-col items-center gap-4">
-                <button 
-                  onClick={handleResetToSource}
-                  className={`px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${confirmReset ? 'bg-red-600 text-white animate-pulse' : 'text-slate-500 hover:text-red-500 hover:bg-red-500/5'}`}
-                >
-                  {confirmReset ? 'Confirm Factory Reset?' : 'Factory Reset Library'}
-                </button>
-                {confirmReset && (
-                  <button onClick={() => setConfirmReset(false)} className="text-[7px] text-slate-600 uppercase font-black hover:text-white">Cancel</button>
-                )}
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={handleResetToSource}
+                    className={`px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${confirmReset ? 'bg-red-600 text-white animate-pulse' : 'text-slate-500 hover:text-red-500 hover:bg-red-500/5'}`}
+                  >
+                    {confirmReset ? 'Confirm Factory Reset?' : 'Factory Reset Library'}
+                  </button>
+                  {confirmReset && (
+                    <button onClick={() => setConfirmReset(false)} className="text-[7px] text-slate-600 uppercase font-black hover:text-white">Cancel</button>
+                  )}
+
+                  <button 
+                    onClick={handleClearCats}
+                    className={`px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${confirmClearCats ? 'bg-orange-600 text-white animate-pulse' : 'text-slate-500 hover:text-orange-500 hover:bg-orange-500/5'}`}
+                  >
+                    {confirmClearCats ? 'Confirm Wipe Categories?' : 'Clear All Categories'}
+                  </button>
+                  {confirmClearCats && (
+                    <button onClick={() => setConfirmClearCats(false)} className="text-[7px] text-slate-600 uppercase font-black hover:text-white">Cancel</button>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
