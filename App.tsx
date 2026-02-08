@@ -16,11 +16,6 @@ const CAT_COLORS_KEY = 'integral_v412_cat_colors';
 const ADMIN_PASSWORD = 'ADMIN';
 
 const DEFAULT_CAT_COLORS: Record<string, string> = {
-  'Meditation': '#10b981',
-  'Tribal': '#94a3b8',
-  'Dance': '#8b5cf6',
-  'Integral Serenity': '#38bdf8',
-  'Permia Community': '#facc15',
   'Other': '#64748b'
 };
 
@@ -51,7 +46,7 @@ const App: React.FC = () => {
   const [categories, setCategories] = useState<VideoCategory[]>(() => {
     const saved = localStorage.getItem(CAT_KEY);
     if (saved) return JSON.parse(saved);
-    return ['Meditation', 'Tribal', 'Dance', 'Integral Serenity', 'Permia Community', 'Other'];
+    return []; // Start with no categories
   });
 
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>(() => {
@@ -169,6 +164,14 @@ const App: React.FC = () => {
       isDisliked: false
     })));
   }, []);
+
+  const handleClearCategories = useCallback(() => {
+    setCategories([]);
+    setCategoryColors(DEFAULT_CAT_COLORS);
+    if (playlistTab !== 'All' && playlistTab !== 'Vault') {
+      setPlaylistTab('All');
+    }
+  }, [playlistTab]);
 
   const handleToggleFavorite = useCallback((id: string) => {
     setVideos(prev => prev.map(v => v.id === id ? { ...v, isFavorite: !v.isFavorite } : v));
@@ -497,6 +500,7 @@ const App: React.FC = () => {
                   onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))}
                   onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))}
                   onResetStats={handleResetStats}
+                  onClearCategories={handleClearCategories}
                   onClose={() => setActiveSecondaryView('none')} 
                 />
               )}
