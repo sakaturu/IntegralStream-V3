@@ -62,8 +62,8 @@ const App: React.FC = () => {
     const saved = localStorage.getItem(DATA_KEY);
     if (saved !== null) {
       try {
-        const parsed = JSON.parse(saved);
-        return parsed.length > 0 ? parsed : getSampleLibrary();
+        // Trust the stored list even if it is empty (user cleared it)
+        return JSON.parse(saved);
       } catch (e) {
         return getSampleLibrary();
       }
@@ -160,11 +160,11 @@ const App: React.FC = () => {
     }
   }, [currentVideoId]);
 
-  const handleAddCategory = (name: string) => {
+  const handleAddCategory = (name: string, color?: string) => {
     if (!categories.includes(name)) {
       setCategories(prev => [...prev, name]);
-      const color = categoryColors['Other'] || '#64748b';
-      setCategoryColors(prev => ({ ...prev, [name]: color }));
+      const finalColor = color || categoryColors['Other'] || '#64748b';
+      setCategoryColors(prev => ({ ...prev, [name]: finalColor }));
     }
   };
 
@@ -242,6 +242,16 @@ const App: React.FC = () => {
         <div className="flex gap-4 items-center">
           {isAuthorized && (
             <button 
+              onClick={() => setShowGenerator(true)}
+              data-tooltip="Generate AI Signal"
+              className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:scale-110 active:scale-95 transition-all cursor-pointer border border-blue-400/50"
+            >
+              <i className="fa-solid fa-plus text-lg"></i>
+            </button>
+          )}
+
+          {isAuthorized && (
+            <button 
               onClick={() => setActiveSecondaryView(p => p === 'moderation' ? 'none' : 'moderation')}
               className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all relative cursor-pointer ${activeSecondaryView === 'moderation' ? 'bg-purple-600 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-white/5 border-white/10 text-slate-400 hover:text-purple-400'}`}
             >
@@ -298,14 +308,6 @@ const App: React.FC = () => {
                   <span className="w-1 h-4 bg-blue-500 rounded-full animate-pulse"></span>
                   {currentVideo ? "Active Mission Stream" : "System Standby"}
                 </h2>
-                {isAuthorized && (
-                  <button 
-                    onClick={() => setShowGenerator(true)}
-                    className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:scale-110 active:scale-95 transition-all cursor-pointer border border-blue-400/50"
-                  >
-                    <i className="fa-solid fa-plus text-xs"></i>
-                  </button>
-                )}
               </div>
 
               <button 
