@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [showLoginOverlay, setShowLoginOverlay] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
   const [activeSecondaryView, setActiveSecondaryView] = useState<'none' | 'reviews' | 'vault' | 'moderation'>('none');
+  const [reviewInitialTab, setReviewInitialTab] = useState<'Read' | 'Write'>('Read');
   const [isPlaying, setIsPlaying] = useState(false);
   const [playlistTab, setPlaylistTab] = useState<VideoCategory | 'All' | 'Vault'>('All');
   const [isCopyingCode, setIsCopyingCode] = useState(false);
@@ -62,7 +63,6 @@ const App: React.FC = () => {
     const saved = localStorage.getItem(DATA_KEY);
     if (saved !== null) {
       try {
-        // Trust the stored list even if it is empty (user cleared it)
         return JSON.parse(saved);
       } catch (e) {
         return getSampleLibrary();
@@ -228,6 +228,11 @@ const App: React.FC = () => {
     };
   };
 
+  const openReviewHub = (tab: 'Read' | 'Write' = 'Read') => {
+    setReviewInitialTab(tab);
+    setActiveSecondaryView('reviews');
+  };
+
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
       <header className="h-20 border-b border-white/5 bg-[#050a18]/80 backdrop-blur-xl flex items-center justify-between px-8 sticky top-0 z-50">
@@ -335,6 +340,7 @@ const App: React.FC = () => {
                     onToggleDislike={() => handleToggleDislike(currentVideo.id)}
                     onToggleFavorite={() => handleToggleFavorite(currentVideo.id)}
                     onViewIncrement={stableViewIncrement}
+                    onWriteReview={() => openReviewHub('Write')}
                   />
                 ) : currentVideo && currentVideo.status === 'generating' ? (
                   <div className="h-full flex flex-col items-center justify-center bg-slate-950 text-blue-500 uppercase font-black text-xs gap-6 p-12">
@@ -382,7 +388,7 @@ const App: React.FC = () => {
                       </div>
 
                       <button 
-                        onClick={() => setActiveSecondaryView(v => v === 'reviews' ? 'none' : 'reviews')}
+                        onClick={() => openReviewHub('Read')}
                         className={`text-[10px] font-black uppercase tracking-widest transition-all hover:brightness-125 flex items-center gap-1.5 cursor-pointer ${activeSecondaryView === 'reviews' ? 'text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'text-purple-500'}`}
                       >
                         <i className="fa-solid fa-comment-dots text-[11px]"></i>
@@ -443,10 +449,16 @@ const App: React.FC = () => {
               )}
 
               {activeSecondaryView === 'reviews' && currentVideo && (
-                <FloatingReviewHub video={currentVideo} isOpen={true} onClose={() => setActiveSecondaryView('none')} onSubmitReview={(r, t) => {
-                  const review = { id: `r-${Date.now()}`, rating: r, text: t, user: 'NeuralClient', timestamp: Date.now(), isApproved: false };
-                  setVideos(prev => prev.map(v => v.id === currentVideo.id ? { ...v, reviews: [review, ...(v.reviews || [])] } : v));
-                }} />
+                <FloatingReviewHub 
+                  video={currentVideo} 
+                  isOpen={true} 
+                  initialTab={reviewInitialTab}
+                  onClose={() => setActiveSecondaryView('none')} 
+                  onSubmitReview={(r, t) => {
+                    const review = { id: `r-${Date.now()}`, rating: r, text: t, user: 'NeuralClient', timestamp: Date.now(), isApproved: false };
+                    setVideos(prev => prev.map(v => v.id === currentVideo.id ? { ...v, reviews: [review, ...(v.reviews || [])] } : v));
+                  }} 
+                />
               )}
             </div>
           </div>
