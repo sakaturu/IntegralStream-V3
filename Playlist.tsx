@@ -218,7 +218,7 @@ const Playlist: React.FC<PlaylistProps> = ({
         <div className="flex items-center justify-between mb-4 px-1">
           <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
-            Signal Archive
+            Video Archive
           </h3>
           <div className="flex items-center gap-4">
             {isAuthorized && (
