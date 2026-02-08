@@ -4,23 +4,68 @@ export const LIBRARY_VERSION = 502;
 
 /**
  * BASE LIBRARY DATA
- * Initializing as an empty array to provide a clear starting state.
+ * Populated with high-quality sample signals to ensure persistence in source code.
  */
-const INITIAL_VIDEO_DATA: any[] = [];
+const INITIAL_VIDEO_DATA: any[] = [
+  {
+    id: 'v1',
+    prompt: "Golden Hour Serenity - Cinematic Nature",
+    category: 'Meditation',
+    url: '6p_S7P_n8iE',
+    thumbnail: 'https://img.youtube.com/vi/6p_S7P_n8iE/mqdefault.jpg'
+  },
+  {
+    id: 'v2',
+    prompt: "Midnight Snowfall Ambience",
+    category: 'Integral Serenity',
+    url: 'CHSnz0DQw68',
+    thumbnail: 'https://img.youtube.com/vi/CHSnz0DQw68/mqdefault.jpg'
+  },
+  {
+    id: 'v3',
+    prompt: "Deep Space Visual Journey",
+    category: 'Other',
+    url: 'LXO-jKksQkM',
+    thumbnail: 'https://img.youtube.com/vi/LXO-jKksQkM/mqdefault.jpg'
+  },
+  {
+    id: 'v4',
+    prompt: "Ocean Waves 4K - Pacific Coast",
+    category: 'Meditation',
+    url: 'nep76m-M-U0',
+    thumbnail: 'https://img.youtube.com/vi/nep76m-M-U0/mqdefault.jpg'
+  },
+  {
+    id: 'v5',
+    prompt: "Tropical Forest Soundscape",
+    category: 'Permia Community',
+    url: '8_z7pM275X8',
+    thumbnail: 'https://img.youtube.com/vi/8_z7pM275X8/mqdefault.jpg'
+  }
+];
 
 export const getSampleLibrary = (): VideoItem[] => {
   return INITIAL_VIDEO_DATA.map((item, idx) => ({
     ...item,
     timestamp: Date.now() - (idx * 100000),
     status: 'ready',
-    viewCount: 0,
-    likeCount: 0,
-    dislikeCount: 0,
-    rating: 0,
-    isFavorite: false, 
+    viewCount: Math.floor(Math.random() * 5000) + 100,
+    likeCount: Math.floor(Math.random() * 500) + 20,
+    dislikeCount: Math.floor(Math.random() * 50),
+    rating: 4.5,
+    isFavorite: idx < 2, 
     isLiked: false,
     isDisliked: false,
-    reviews: []
+    reviews: [
+      {
+        id: `r-${idx}-1`,
+        user: 'NeuralSystem',
+        rating: 5,
+        text: 'Optimal signal quality detected. Highly recommended for focus.',
+        timestamp: Date.now() - 500000,
+        isApproved: true
+      }
+    ]
   }));
 };
 
