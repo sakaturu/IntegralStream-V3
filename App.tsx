@@ -6,9 +6,10 @@ import LoginGate from './components/LoginGate';
 import VaultGallery from './components/VaultGallery';
 import FloatingReviewHub from './components/FloatingReviewHub';
 import ModerationPanel from './components/ModerationPanel';
-import { getSampleLibrary, getSurpriseVideo } from './services/sampleData';
+import { getSampleLibrary, getSurpriseVideo, LIBRARY_VERSION } from './services/sampleData';
 
 const DATA_KEY = 'integral_v412_vault';
+const VERSION_KEY = 'integral_v412_version';
 const AUTH_KEY = 'integral_v411_auth';
 const CAT_KEY = 'integral_v412_categories';
 const CAT_COLORS_KEY = 'integral_v412_cat_colors';
@@ -18,6 +19,7 @@ const DEFAULT_CATEGORIES: VideoCategory[] = [
   'Meditation',
   'Integral Serenity',
   'Permia Community',
+  'Spanish',
   'Other'
 ];
 
@@ -25,6 +27,7 @@ const DEFAULT_CAT_COLORS: Record<string, string> = {
   'Meditation': '#10b981',
   'Integral Serenity': '#ef4444',
   'Permia Community': '#facc15',
+  'Spanish': '#f59e0b',
   'Other': '#64748b'
 };
 
@@ -48,6 +51,7 @@ const App: React.FC = () => {
   const [playlistTab, setPlaylistTab] = useState<VideoCategory | 'All' | 'Vault'>('All');
   
   const playerContainerRef = useRef<HTMLDivElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
 
   const [categories, setCategories] = useState<VideoCategory[]>(() => {
     const saved = localStorage.getItem(CAT_KEY);
@@ -62,21 +66,36 @@ const App: React.FC = () => {
   });
 
   const [videos, setVideos] = useState<VideoItem[]>(() => {
-    const saved = localStorage.getItem(DATA_KEY);
-    if (saved !== null) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return getSampleLibrary();
-      }
+    const localVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0', 10);
+    const savedDataStr = localStorage.getItem(DATA_KEY);
+    const sourceData = getSampleLibrary();
+    
+    // Hard reset threshold updated to 1500 for latest signal synchronization
+    if (LIBRARY_VERSION >= 1500 && localVersion < 1500) {
+      console.warn("INTEGRAL SYSTEM: Synchronizing Expanded Signal Library v1500...");
+      return sourceData; 
     }
-    return getSampleLibrary();
+
+    if (!savedDataStr) return sourceData;
+
+    try {
+      let localData: VideoItem[] = JSON.parse(savedDataStr);
+      if (LIBRARY_VERSION > localVersion) {
+        const localUrls = new Set(localData.map(v => v.url));
+        const newItems = sourceData.filter(v => !localUrls.has(v.url));
+        return [...newItems, ...localData];
+      }
+      return localData;
+    } catch (e) {
+      return sourceData;
+    }
   });
 
   const [currentVideoId, setCurrentVideoId] = useState<string | undefined>(videos[0]?.id);
 
   useEffect(() => {
     localStorage.setItem(DATA_KEY, JSON.stringify(videos));
+    localStorage.setItem(VERSION_KEY, LIBRARY_VERSION.toString());
     localStorage.setItem(AUTH_KEY, isAuthorized ? 'true' : 'false');
     localStorage.setItem(CAT_KEY, JSON.stringify(categories));
     localStorage.setItem(CAT_COLORS_KEY, JSON.stringify(categoryColors));
@@ -98,6 +117,27 @@ const App: React.FC = () => {
       }
       return filtered;
     });
+  }, [currentVideoId]);
+
+  const handleManualAdd = useCallback((u: string, p: string, c: VideoCategory) => {
+    const nv: VideoItem = { 
+      id: `m-${Date.now()}`, 
+      url: u, 
+      prompt: p, 
+      category: c, 
+      isFavorite: false, 
+      viewCount: 0, 
+      likeCount: 0, 
+      dislikeCount: 0, 
+      status: 'ready', 
+      timestamp: Date.now(), 
+      rating: 0, 
+      isLiked: false, 
+      isDisliked: false, 
+      reviews: [] 
+    };
+    setVideos(prev => [nv, ...prev]);
+    if (!currentVideoId) setCurrentVideoId(nv.id);
   }, [currentVideoId]);
 
   const handlePurgeAll = useCallback(() => {
@@ -191,6 +231,16 @@ const App: React.FC = () => {
     }
   };
 
+  const toggleModeration = () => {
+    const isCurrentlyOpen = activeSecondaryView === 'moderation';
+    setActiveSecondaryView(isCurrentlyOpen ? 'none' : 'moderation');
+    if (!isCurrentlyOpen) {
+      setTimeout(() => {
+        terminalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  };
+
   const currentVideo = useMemo(() => videos.find(v => v.id === currentVideoId) || null, [videos, currentVideoId]);
 
   const stableViewIncrement = useCallback(() => {
@@ -225,10 +275,12 @@ const App: React.FC = () => {
         <div className="flex gap-4 items-center">
           {isAuthorized && (
             <button 
-              onClick={() => setActiveSecondaryView(p => p === 'moderation' ? 'none' : 'moderation')}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all relative cursor-pointer ${activeSecondaryView === 'moderation' ? 'bg-purple-600 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-white/5 border-white/10 text-slate-400 hover:text-purple-400'}`}
+              onClick={toggleModeration}
+              data-tooltip="Open Control Terminal"
+              className={`h-11 px-4 rounded-xl flex items-center gap-2 border transition-all relative cursor-pointer font-black text-[10px] tracking-widest uppercase ${activeSecondaryView === 'moderation' ? 'bg-purple-600 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'bg-white/5 border-white/10 text-slate-400 hover:text-purple-400 hover:bg-purple-500/5'}`}
             >
-              <i className="fa-solid fa-shield-check text-lg"></i>
+              <i className="fa-solid fa-shield-check text-base"></i>
+              <span>Terminal</span>
               {pendingReviewsCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full text-[10px] font-black flex items-center justify-center border-2 border-[#050a18] shadow-lg">
                   {pendingReviewsCount}
@@ -239,7 +291,8 @@ const App: React.FC = () => {
 
           <button 
             onClick={() => isAuthorized ? setIsAuthorized(false) : setShowLoginOverlay(true)}
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all cursor-pointer ${isAuthorized ? 'bg-blue-600/10 border-blue-500/30 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}`}
+            data-tooltip={isAuthorized ? "Logout Session" : "Admin Login"}
+            className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${isAuthorized ? 'bg-blue-600/10 border-blue-500/30 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}`}
           >
             <i className={`fa-solid ${isAuthorized ? 'fa-user-check' : 'fa-user-lock'}`}></i>
           </button>
@@ -257,11 +310,7 @@ const App: React.FC = () => {
             onRemove={handleRemoveVideo} 
             onToggleFavorite={handleToggleFavorite}
             onAddRandom={() => { const v = getSurpriseVideo(); setVideos(p => [v, ...p]); setCurrentVideoId(v.id); }}
-            onAddManualVideo={(u, p, c) => {
-              const nv: VideoItem = { id: `m-${Date.now()}`, url: u, prompt: p, category: c, isFavorite: false, viewCount: 0, likeCount: 0, dislikeCount: 0, status: 'ready', timestamp: Date.now(), rating: 0, isLiked: false, isDisliked: false, reviews: [] };
-              setVideos(prev => [nv, ...prev]);
-              setCurrentVideoId(nv.id);
-            }}
+            onAddManualVideo={handleManualAdd}
             onMoveVideo={() => {}}
             onPurgeAll={handlePurgeAll}
             activeTab={playlistTab}
@@ -378,16 +427,20 @@ const App: React.FC = () => {
 
             <div className="px-8 w-full mt-4 pb-20">
               {activeSecondaryView === 'moderation' && (
-                <ModerationPanel 
-                  videos={videos} 
-                  categories={categories}
-                  categoryColors={categoryColors}
-                  onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))}
-                  onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))}
-                  onResetStats={handleResetStats}
-                  onClearCategories={handleClearCategories}
-                  onClose={() => setActiveSecondaryView('none')} 
-                />
+                <div ref={terminalRef}>
+                  <ModerationPanel 
+                    videos={videos} 
+                    categories={categories}
+                    categoryColors={categoryColors}
+                    onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))}
+                    onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))}
+                    onAddVideo={handleManualAdd}
+                    onRemoveVideo={handleRemoveVideo}
+                    onResetStats={handleResetStats}
+                    onClearCategories={handleClearCategories}
+                    onClose={() => setActiveSecondaryView('none')} 
+                  />
+                </div>
               )}
 
               {activeSecondaryView === 'vault' && (
