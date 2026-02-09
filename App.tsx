@@ -20,7 +20,7 @@ const DEFAULT_CATEGORIES: VideoCategory[] = [
   'Integral Serenity',
   'Permia Community',
   'Spanish',
-  'Other'
+  'Fav. Pick'
 ];
 
 const DEFAULT_CAT_COLORS: Record<string, string> = {
@@ -28,7 +28,7 @@ const DEFAULT_CAT_COLORS: Record<string, string> = {
   'Integral Serenity': '#ef4444',
   'Permia Community': '#facc15',
   'Spanish': '#f59e0b',
-  'Other': '#64748b'
+  'Fav. Pick': '#64748b'
 };
 
 const IntegralLogo = () => (
@@ -70,9 +70,9 @@ const App: React.FC = () => {
     const savedDataStr = localStorage.getItem(DATA_KEY);
     const sourceData = getSampleLibrary();
     
-    // Hard reset threshold updated to 1500 for latest signal synchronization
-    if (LIBRARY_VERSION >= 1500 && localVersion < 1500) {
-      console.warn("INTEGRAL SYSTEM: Synchronizing Expanded Signal Library v1500...");
+    // Hard reset threshold updated to 1700 for "Fav. Pick" rebranding
+    if (LIBRARY_VERSION >= 1700 && localVersion < 1700) {
+      console.warn("INTEGRAL SYSTEM: Synchronizing Rebranded Signal Library v1700...");
       return sourceData; 
     }
 
@@ -206,7 +206,7 @@ const App: React.FC = () => {
   const handleAddCategory = (name: string, color?: string) => {
     if (!categories.includes(name)) {
       setCategories(prev => [...prev, name]);
-      const finalColor = color || categoryColors['Other'] || '#64748b';
+      const finalColor = color || categoryColors['Fav. Pick'] || '#64748b';
       setCategoryColors(prev => ({ ...prev, [name]: finalColor }));
     }
   };
