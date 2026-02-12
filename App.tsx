@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { VideoItem, VideoCategory } from './types';
 import VideoPlayer from './components/VideoPlayer';
 import Playlist from './Playlist';
