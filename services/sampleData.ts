@@ -19,29 +19,6 @@ const INITIAL_VIDEO_DATA: any[] = [
     "thumbnail": "https://img.youtube.com/vi/njX2bu-_Vw4/mqdefault.jpg"
   },
   {
-    "id": "v-cin-002",
-    "prompt": "Deep Forest Serenity - 432Hz Ambient",
-    "category": "Meditation",
-    "url": "hX3j0sQ7ot8",
-    "thumbnail": "https://img.youtube.com/vi/hX3j0sQ7ot8/mqdefault.jpg"
-  },
-  // Integral Serenity
-  {
-    "id": "v-int-001",
-    "prompt": "The Flow State - Integral Resonance",
-    "category": "Integral Serenity",
-    "url": "92HFs_eWwqc",
-    "thumbnail": "https://img.youtube.com/vi/92HFs_eWwqc/mqdefault.jpg"
-  },
-  {
-    "id": "v-int-002",
-    "prompt": "Ethereal Landscapes - Floating City",
-    "category": "Integral Serenity",
-    "url": "1-iLCH0vXp0",
-    "thumbnail": "https://img.youtube.com/vi/1-iLCH0vXp0/mqdefault.jpg"
-  },
-  // Permia Community
-  {
     "id": "v-permia-001",
     "prompt": "Permia Community - Future Living",
     "category": "Permia Community",
@@ -55,28 +32,12 @@ const INITIAL_VIDEO_DATA: any[] = [
     "url": "CFuwwO9XgQA",
     "thumbnail": "https://img.youtube.com/vi/CFuwwO9XgQA/mqdefault.jpg"
   },
-  // Spanish
-  {
-    "id": "v-span-001",
-    "prompt": "Paraíso Natural - Belleza de la Tierra",
-    "category": "Spanish",
-    "url": "73_1N_X_k9U",
-    "thumbnail": "https://img.youtube.com/vi/73_1N_X_k9U/mqdefault.jpg"
-  },
   {
     "id": "v-span-002",
     "prompt": "Meditación Guiada - Relajación Total",
     "category": "Spanish",
     "url": "MqHhPApGM0Q",
     "thumbnail": "https://img.youtube.com/vi/MqHhPApGM0Q/mqdefault.jpg"
-  },
-  // Fav. Picks
-  {
-    "id": "v-fav-001",
-    "prompt": "Cyberpunk 2077 - Night City Drive Cinematic",
-    "category": "Fav. Pick",
-    "url": "XqYvY7F8pYI",
-    "thumbnail": "https://img.youtube.com/vi/XqYvY7F8pYI/mqdefault.jpg"
   },
   {
     "id": "v-fav-002",
