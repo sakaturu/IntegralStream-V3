@@ -66,7 +66,6 @@ const App: React.FC = () => {
     return localStorage.getItem(USER_LOCKED_KEY) === 'true';
   });
   const [isEditingUser, setIsEditingUser] = useState(false);
-  const [tempUser, setTempUser] = useState(currentUser);
   
   const [userFavMap, setUserFavMap] = useState<Record<string, string[]>>(() => {
     const saved = localStorage.getItem(FAV_MAP_KEY);
@@ -87,7 +86,7 @@ const App: React.FC = () => {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const checkSyncLock = useRef(false);
 
-  // Persistence Effects
+  // Persistence Effects - Triggered whenever name or lock status changes
   useEffect(() => {
     localStorage.setItem(USER_KEY, currentUser);
     localStorage.setItem(USER_LOCKED_KEY, isUserLocked ? 'true' : 'false');
@@ -245,18 +244,17 @@ const App: React.FC = () => {
   const handleRemoveCategory = (name: string) => { setCategories(prev => prev.filter(c => c !== name)); if (playlistTab === name) setPlaylistTab('All'); };
   const handleUpdateCategoryColor = (category: string, color: string) => { setCategoryColors(prev => ({ ...prev, [category]: color })); };
 
-  const handleConfirmIdentity = () => {
-    if (tempUser.trim()) {
-      setCurrentUser(tempUser.trim());
+  // Identity logic refined for immediate storage and permanent locking
+  const handleLockIdentity = () => {
+    if (currentUser.trim()) {
       setIsUserLocked(true);
       setIsEditingUser(false);
     }
   };
 
-  const handleOpenIdentityEdit = () => {
+  const handleIdentityChange = (val: string) => {
     if (!isUserLocked) {
-      setTempUser(currentUser);
-      setIsEditingUser(!isEditingUser);
+      setCurrentUser(val.toUpperCase().replace(/\s+/g, '_'));
     }
   };
 
@@ -294,7 +292,7 @@ const App: React.FC = () => {
           {/* Active User Chip */}
           <div className="flex flex-col items-end relative">
             <div 
-              onClick={handleOpenIdentityEdit}
+              onClick={() => !isUserLocked && setIsEditingUser(!isEditingUser)}
               className={`px-4 h-11 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center gap-3 transition-all group ${isUserLocked ? 'cursor-default opacity-90' : 'cursor-pointer hover:bg-red-600/20'}`}
             >
               <div className="flex flex-col items-end">
@@ -306,22 +304,22 @@ const App: React.FC = () => {
             
             {isEditingUser && !isUserLocked && (
               <div className="absolute top-16 right-0 w-64 bg-slate-900 border border-white/10 p-4 rounded-2xl shadow-2xl z-[100] animate-fade-in">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Identity Reconfiguration</p>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Identity Setup</p>
                 <input 
                   autoFocus
                   type="text" 
-                  value={tempUser} 
-                  onChange={(e) => setTempUser(e.target.value.toUpperCase().replace(/\s+/g, '_'))}
-                  onKeyDown={(e) => e.key === 'Enter' && handleConfirmIdentity()}
+                  value={currentUser} 
+                  onChange={(e) => handleIdentityChange(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLockIdentity()}
                   className="w-full bg-black border border-white/10 rounded-xl px-4 py-2 text-[10px] text-white focus:outline-none focus:border-red-500/40"
                   placeholder="USERNAME..."
                 />
-                <p className="text-[7px] font-bold text-slate-600 uppercase mt-2">Warning: Identity is final once locked.</p>
+                <p className="text-[7px] font-bold text-slate-600 uppercase mt-2">Personalizes your vault instantly.</p>
                 <button 
-                  onClick={handleConfirmIdentity}
+                  onClick={handleLockIdentity}
                   className="w-full mt-4 py-2 bg-red-600 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-red-500 transition-colors"
                 >
-                  Confirm Identity
+                  Lock Identity Permanently
                 </button>
               </div>
             )}
