@@ -106,12 +106,14 @@ const App: React.FC = () => {
     localStorage.setItem(USER_KEY, currentUser);
     localStorage.setItem(USER_LOCKED_KEY, isUserLocked ? 'true' : 'false');
     localStorage.setItem(USER_NODE_ID_KEY, nodeId);
+  }, [currentUser, isUserLocked, nodeId]);
+
+  useEffect(() => {
     localStorage.setItem(FAV_MAP_KEY, JSON.stringify(userFavMap));
-  }, [currentUser, isUserLocked, nodeId, userFavMap]);
+  }, [userFavMap]);
 
   // Persona Handshake
   const handleIdentify = (name: string, remember: boolean) => {
-    if (isUserLocked) return false; // Prevent re-identification
     const cleanName = name.trim().toUpperCase().replace(/\s+/g, '_');
     if (cleanName) {
       setCurrentUser(cleanName);
@@ -124,6 +126,15 @@ const App: React.FC = () => {
       return true;
     }
     return false;
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(MASTER_IDENTITY);
+    setIsUserLocked(false);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(USER_LOCKED_KEY);
+    setActiveSecondaryView('none');
+    setShowLoginOverlay(true);
   };
 
   const handleRestoreNode = (key: string) => {
@@ -198,7 +209,7 @@ const App: React.FC = () => {
       const baseData: VideoItem[] = JSON.parse(savedDataStr);
       const syncedData = baseData.map(lv => {
         const sv = currentSourceMap.get(lv.url);
-        if (sv) return { ...sv, id: lv.id, viewCount: lv.viewCount, likeCount: lv.likeCount, dislikeCount: lv.dislikeCount, isFavorite: lv.isFavorite, isLiked: lv.isLiked, isDisliked: lv.isDisliked, reviews: lv.reviews || [] };
+        if (sv) return { ...sv, id: lv.id, viewCount: lv.viewCount, likeCount: lv.likeCount, dislikeCount: lv.dislikeCount, reviews: lv.reviews || [] };
         return lv;
       });
       const localUrls = new Set(syncedData.map(v => v.url));
@@ -295,19 +306,22 @@ const App: React.FC = () => {
         <div className="flex gap-4 items-center">
           <div className="flex flex-col items-end relative group">
             <div 
-              onClick={() => !isUserLocked && setShowLoginOverlay(true)}
-              className={`px-4 h-11 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center gap-3 transition-all ${isUserLocked ? 'cursor-default opacity-90' : 'cursor-pointer hover:bg-red-600/20'}`}
+              onClick={() => isUserLocked ? handleLogout() : setShowLoginOverlay(true)}
+              className={`px-4 h-11 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center gap-3 transition-all cursor-pointer hover:bg-red-600/20`}
             >
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-1.5">
                    {isUserLocked ? (
-                     <i className="fa-solid fa-lock text-[7px] text-red-500/60" title="Fixed Persona"></i>
+                     <i className="fa-solid fa-lock text-[7px] text-red-500/60 group-hover:hidden"></i>
                    ) : currentUser === MASTER_IDENTITY ? (
                      <i className="fa-solid fa-code text-[7px] text-blue-500"></i>
                    ) : (
                      <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
                    )}
-                   <span className="text-[7px] font-black text-red-500/60 uppercase tracking-widest">{isUserLocked ? 'Verified Node' : 'Identified Persona'}</span>
+                   {isUserLocked && <i className="fa-solid fa-arrow-right-from-bracket text-[7px] text-white hidden group-hover:inline-block"></i>}
+                   <span className="text-[7px] font-black text-red-500/60 uppercase tracking-widest group-hover:text-white transition-colors">
+                    {isUserLocked ? 'Verified (Disconnect)' : 'Identified Persona'}
+                   </span>
                 </div>
                 <span className="text-[10px] font-black text-red-500 uppercase tracking-widest group-hover:text-red-400 transition-colors">{currentUser}</span>
               </div>
@@ -391,7 +405,7 @@ const App: React.FC = () => {
             onIdentify={handleIdentify}
             onRestore={handleRestoreNode} 
             isIdentityLocked={isUserLocked}
-            onClose={() => !showLoginOverlay && setShowLoginOverlay(false)} 
+            onClose={() => isUserLocked && setShowLoginOverlay(false)} 
             defaultName={currentUser !== MASTER_IDENTITY ? currentUser : ''}
           />
         </div>

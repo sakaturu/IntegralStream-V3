@@ -20,7 +20,7 @@ const LoginGate: React.FC<LoginGateProps> = ({
   isIdentityLocked = false 
 }) => {
   const [activeTab, setActiveTab] = useState<'Identify' | 'Terminal' | 'Restore'>(
-    isIdentityLocked ? 'Terminal' : 'Identify'
+    'Identify'
   );
   const [pass, setPass] = useState('');
   const [personaName, setPersonaName] = useState(defaultName);
@@ -81,14 +81,12 @@ const LoginGate: React.FC<LoginGateProps> = ({
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-30"></div>
         
         <div className="flex bg-black/40 p-1 rounded-xl border border-white/5 mb-2">
-           {!isIdentityLocked && (
-             <button 
-              onClick={() => { setActiveTab('Identify'); setError(false); }}
-              className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'Identify' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
-             >
-              Identify
-             </button>
-           )}
+           <button 
+            onClick={() => { setActiveTab('Identify'); setError(false); }}
+            className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'Identify' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+           >
+            {isIdentityLocked ? 'Switch' : 'Identify'}
+           </button>
            <button 
             onClick={() => { setActiveTab('Terminal'); setError(false); }}
             className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'Terminal' ? 'bg-white text-slate-950 shadow-lg' : 'text-slate-500 hover:text-white'}`}
@@ -182,7 +180,7 @@ const LoginGate: React.FC<LoginGateProps> = ({
               : 'bg-white text-slate-950 hover:bg-blue-50'
             }`}
           >
-            {isVerifying ? 'SYNCING MATRIX...' : restoreSuccess ? 'NODE RESTORED' : activeTab === 'Identify' ? 'INITIALIZE NODE' : 'AUTHORIZE ACCESS'}
+            {isVerifying ? 'SYNCING MATRIX...' : restoreSuccess ? 'NODE RESTORED' : activeTab === 'Identify' ? (isIdentityLocked ? 'UPDATE PERSONA' : 'INITIALIZE NODE') : 'AUTHORIZE ACCESS'}
           </button>
         </form>
       </div>
