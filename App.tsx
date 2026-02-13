@@ -6,15 +6,15 @@ import LoginGate from './components/LoginGate';
 import VaultGallery from './components/VaultGallery';
 import FloatingReviewHub from './components/FloatingReviewHub';
 import ModerationPanel from './components/ModerationPanel';
-import { getSampleLibrary, getSurpriseVideo, LIBRARY_VERSION } from './services/sampleData';
+import { getSampleLibrary, getSurpriseVideo, LIBRARY_VERSION, MASTER_IDENTITY } from './services/sampleData';
 
 const DATA_KEY = `integral_vault_v${LIBRARY_VERSION}`;
 const VERSION_KEY = `integral_version_v${LIBRARY_VERSION}`;
 const AUTH_KEY = 'integral_v411_auth';
 const CAT_KEY = `integral_categories_v${LIBRARY_VERSION}`;
 const CAT_COLORS_KEY = `integral_cat_colors_v${LIBRARY_VERSION}`;
-const USER_KEY = 'integral_active_user_v3';
-const USER_LOCKED_KEY = 'integral_user_locked_v3';
+const USER_KEY = 'integral_active_user_v4'; // Incremented to prioritize new logic
+const USER_LOCKED_KEY = 'integral_user_locked_v4';
 const USER_NODE_ID_KEY = 'integral_user_node_id';
 const FAV_MAP_KEY = 'integral_user_fav_map';
 const ADMIN_PASSWORD = 'ADMIN';
@@ -68,9 +68,9 @@ const App: React.FC = () => {
     return localStorage.getItem(AUTH_KEY) === 'true';
   });
   
-  // User Identity & Node Persistence State
+  // User Identity & Node Persistence State - Priority: Local Storage -> MASTER_IDENTITY (from Code)
   const [currentUser, setCurrentUser] = useState<string>(() => {
-    return localStorage.getItem(USER_KEY) || 'NEURAL_NODE_01';
+    return localStorage.getItem(USER_KEY) || MASTER_IDENTITY;
   });
   const [isUserLocked, setIsUserLocked] = useState<boolean>(() => {
     return localStorage.getItem(USER_LOCKED_KEY) === 'true';
@@ -103,7 +103,7 @@ const App: React.FC = () => {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const checkSyncLock = useRef(false);
 
-  // Persistence Effects - Absolute sync with localStorage
+  // Persistence Effects
   useEffect(() => {
     localStorage.setItem(USER_KEY, currentUser);
     localStorage.setItem(USER_LOCKED_KEY, isUserLocked ? 'true' : 'false');
@@ -116,9 +116,6 @@ const App: React.FC = () => {
 
   // Node Restoration Logic
   const handleRestoreNode = (key: string) => {
-    // In a real online app, this would fetch from a database.
-    // For this demonstration, we use the key to reconstruct or re-authorize.
-    // We'll simulate a fetch.
     if (key.startsWith('INT-')) {
       setNodeId(key);
       setIsUserLocked(true);
@@ -134,23 +131,9 @@ const App: React.FC = () => {
   };
 
   // Sync Logics
-  const triggerReload = useCallback(() => {
-    window.location.reload();
-  }, []);
-
-  const triggerSyncSequence = useCallback(() => {
-    setIsSyncingLive(true);
-    setTimeout(triggerReload, 1500);
-  }, [triggerReload]);
-
-  const handleHardSyncSource = useCallback(() => {
-    setIsSyncingLive(true);
-    localStorage.removeItem(DATA_KEY);
-    localStorage.removeItem(CAT_KEY);
-    localStorage.removeItem(CAT_COLORS_KEY);
-    localStorage.removeItem(VERSION_KEY);
-    setTimeout(triggerReload, 2000);
-  }, [triggerReload]);
+  const triggerReload = useCallback(() => { window.location.reload(); }, []);
+  const triggerSyncSequence = useCallback(() => { setIsSyncingLive(true); setTimeout(triggerReload, 1500); }, [triggerReload]);
+  const handleHardSyncSource = useCallback(() => { setIsSyncingLive(true); localStorage.removeItem(DATA_KEY); localStorage.removeItem(CAT_KEY); localStorage.removeItem(CAT_COLORS_KEY); localStorage.removeItem(VERSION_KEY); setTimeout(triggerReload, 2000); }, [triggerReload]);
 
   const checkVersion = useCallback(async (manual = false) => {
     if (checkSyncLock.current) return;
@@ -220,8 +203,6 @@ const App: React.FC = () => {
   }, [videos, isAuthorized, categories, categoryColors]);
 
   const pendingReviewsCount = useMemo(() => videos.reduce((acc, v) => acc + (v.reviews?.filter(r => !r.isApproved).length || 0), 0), [videos]);
-  
-  // User Specific Vault Logic
   const currentUserFavorites = useMemo(() => userFavMap[currentUser] || [], [userFavMap, currentUser]);
   const vaultCount = useMemo(() => currentUserFavorites.length, [currentUserFavorites]);
 
@@ -233,9 +214,7 @@ const App: React.FC = () => {
     });
     setUserFavMap(prev => {
       const next = { ...prev };
-      Object.keys(next).forEach(user => {
-        next[user] = next[user].filter(fid => fid !== id);
-      });
+      Object.keys(next).forEach(user => { next[user] = next[user].filter(fid => fid !== id); });
       return next;
     });
   }, [currentVideoId]);
@@ -246,14 +225,7 @@ const App: React.FC = () => {
     if (!currentVideoId) setCurrentVideoId(nv.id);
   }, [currentVideoId]);
 
-  const handlePurgeAll = useCallback(() => { 
-    setVideos([]); 
-    setCurrentVideoId(undefined); 
-    setIsPlaying(false); 
-    setActiveSecondaryView('none'); 
-    setUserFavMap({});
-  }, []);
-
+  const handlePurgeAll = useCallback(() => { setVideos([]); setCurrentVideoId(undefined); setIsPlaying(false); setActiveSecondaryView('none'); setUserFavMap({}); }, []);
   const handleResetStats = useCallback(() => { setVideos(prev => prev.map(v => ({ ...v, viewCount: 0, likeCount: 0, dislikeCount: 0, isLiked: false, isDisliked: false }))); }, []);
   const handleClearCategories = useCallback(() => { setCategories(DEFAULT_CATEGORIES); setCategoryColors(DEFAULT_CAT_COLORS); if (playlistTab !== 'All' && playlistTab !== 'Vault') setPlaylistTab('All'); }, [playlistTab]);
   
@@ -261,12 +233,7 @@ const App: React.FC = () => {
     setUserFavMap(prev => {
       const userFavs = prev[currentUser] || [];
       const isAlreadyFav = userFavs.includes(id);
-      return {
-        ...prev,
-        [currentUser]: isAlreadyFav 
-          ? userFavs.filter(fid => fid !== id)
-          : [...userFavs, id]
-      };
+      return { ...prev, [currentUser]: isAlreadyFav ? userFavs.filter(fid => fid !== id) : [...userFavs, id] };
     });
   }, [currentUser]);
 
@@ -275,28 +242,12 @@ const App: React.FC = () => {
   const handleIncrementView = useCallback((id: string) => { setVideos(prev => prev.map(v => v.id === id ? { ...v, viewCount: v.viewCount + 1 } : v)); }, []);
   const handleSelectVideo = useCallback((v: VideoItem) => { if (currentVideoId === v.id) { setIsPlaying(prev => !prev); } else { setCurrentVideoId(v.id); setIsPlaying(true); } }, [currentVideoId]);
 
-  const handleAddCategory = (name: string, color?: string) => {
-    if (!categories.includes(name)) { setCategories(prev => [...prev, name]); setCategoryColors(prev => ({ ...prev, [name]: color || '#64748b' })); }
-  };
+  const handleAddCategory = (name: string, color?: string) => { if (!categories.includes(name)) { setCategories(prev => [...prev, name]); setCategoryColors(prev => ({ ...prev, [name]: color || '#64748b' })); } };
   const handleRemoveCategory = (name: string) => { setCategories(prev => prev.filter(c => c !== name)); if (playlistTab === name) setPlaylistTab('All'); };
   const handleUpdateCategoryColor = (category: string, color: string) => { setCategoryColors(prev => ({ ...prev, [category]: color })); };
 
-  // Identity logic for persistence across device/reloads
-  const handleLockIdentity = () => {
-    if (currentUser.trim()) {
-      setIsUserLocked(true);
-      setIsEditingUser(false);
-      localStorage.setItem(USER_LOCKED_KEY, 'true');
-    }
-  };
-
-  const handleIdentityChange = (val: string) => {
-    if (!isUserLocked) {
-      const processed = val.toUpperCase().replace(/\s+/g, '_');
-      setCurrentUser(processed);
-      localStorage.setItem(USER_KEY, processed);
-    }
-  };
+  const handleLockIdentity = () => { if (currentUser.trim()) { setIsUserLocked(true); setIsEditingUser(false); localStorage.setItem(USER_LOCKED_KEY, 'true'); } };
+  const handleIdentityChange = (val: string) => { if (!isUserLocked) { const processed = val.toUpperCase().replace(/\s+/g, '_'); setCurrentUser(processed); localStorage.setItem(USER_KEY, processed); } };
 
   const currentVideo = useMemo(() => videos.find(v => v.id === currentVideoId) || null, [videos, currentVideoId]);
 
@@ -329,7 +280,6 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex gap-4 items-center">
-          {/* Active User Chip with Cloud Sync Status */}
           <div className="flex flex-col items-end relative">
             <div 
               onClick={() => !isUserLocked && setIsEditingUser(!isEditingUser)}
@@ -337,7 +287,11 @@ const App: React.FC = () => {
             >
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-1.5">
-                   <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
+                   {currentUser === MASTER_IDENTITY ? (
+                     <i className="fa-solid fa-code text-[7px] text-blue-500" title="Source-Bound Identity"></i>
+                   ) : (
+                     <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
+                   )}
                    <span className="text-[7px] font-black text-red-500/60 uppercase tracking-widest">{isUserLocked ? 'Verified Node' : 'Active Node'}</span>
                 </div>
                 <span className="text-[10px] font-black text-red-500 uppercase tracking-widest group-hover:text-red-400 transition-colors">{currentUser}</span>
@@ -351,32 +305,16 @@ const App: React.FC = () => {
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Initialization Matrix</p>
                   <button onClick={() => setIsEditingUser(false)} className="text-[8px] font-black text-slate-600 hover:text-white uppercase">Close</button>
                 </div>
-                <input 
-                  autoFocus
-                  type="text" 
-                  value={currentUser} 
-                  onChange={(e) => handleIdentityChange(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleLockIdentity()}
-                  className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-[11px] text-white focus:outline-none focus:border-red-500/40 transition-all font-mono"
-                  placeholder="ID_NAME..."
-                />
-                
-                {/* Backup & Recovery Section */}
+                <input autoFocus type="text" value={currentUser} onChange={(e) => handleIdentityChange(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLockIdentity()} className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-[11px] text-white focus:outline-none focus:border-red-500/40 transition-all font-mono" placeholder="ID_NAME..." />
                 <div className="mt-6 pt-4 border-t border-white/5">
                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Cloud Recovery Key</p>
                    <div className="flex items-center gap-2 p-2 bg-black/60 rounded-xl border border-white/5 group/key cursor-pointer" onClick={handleCopyKey}>
                       <span className="flex-1 text-[10px] font-mono text-blue-400 truncate tracking-tighter">{nodeId}</span>
                       <i className={`fa-solid ${copyFeedback ? 'fa-check text-green-500' : 'fa-copy text-slate-600 group-hover/key:text-white'} text-[10px]`}></i>
                    </div>
-                   <p className="text-[7px] font-bold text-slate-600 uppercase mt-2 leading-tight">Save this key to restore your persona on any device or after clearing cache.</p>
+                   <p className="text-[7px] font-bold text-slate-600 uppercase mt-2 leading-tight text-center">Export this identity in Terminal (Forge) to save permanently "in the code".</p>
                 </div>
-
-                <button 
-                  onClick={handleLockIdentity}
-                  className="w-full mt-6 py-3 bg-red-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-red-500 transition-all shadow-lg active:scale-95"
-                >
-                  Initialize Node
-                </button>
+                <button onClick={handleLockIdentity} className="w-full mt-6 py-3 bg-red-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-red-500 transition-all shadow-lg active:scale-95">Initialize Node</button>
               </div>
             )}
           </div>
@@ -391,10 +329,7 @@ const App: React.FC = () => {
               {pendingReviewsCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full text-[10px] font-black flex items-center justify-center border-2 border-black shadow-lg">{pendingReviewsCount}</span>}
             </button>
           )}
-          <button 
-            onClick={() => isAuthorized ? setIsAuthorized(false) : setShowLoginOverlay(true)} 
-            className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${isAuthorized ? 'bg-blue-600/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}`}
-          >
+          <button onClick={() => isAuthorized ? setIsAuthorized(false) : setShowLoginOverlay(true)} className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${isAuthorized ? 'bg-blue-600/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}`}>
             <i className={`fa-solid ${isAuthorized ? 'fa-unlock' : 'fa-lock'}`}></i>
           </button>
         </div>
@@ -402,60 +337,23 @@ const App: React.FC = () => {
 
       <div className="flex-1 flex overflow-hidden">
         <aside className="w-[440px] flex-shrink-0 min-w-0 border-r border-white/5 bg-black/20 overflow-y-auto custom-scrollbar">
-          <Playlist 
-            videos={videos} 
-            categories={categories} 
-            categoryColors={categoryColors} 
-            currentVideo={currentVideo} 
-            onSelect={handleSelectVideo} 
-            onRemove={handleRemoveVideo} 
-            onToggleFavorite={handleToggleFavorite} 
-            userFavorites={currentUserFavorites}
-            onAddRandom={() => { const v = getSurpriseVideo(); setVideos(p => [v, ...p]); setCurrentVideoId(v.id); }} 
-            onAddManualVideo={handleManualAdd} 
-            onMoveVideo={() => {}} 
-            onPurgeAll={handlePurgeAll} 
-            activeTab={playlistTab} 
-            setActiveTab={setPlaylistTab} 
-            isAuthorized={isAuthorized} 
-            onAddCategory={handleAddCategory} 
-            onRemoveCategory={handleRemoveCategory} 
-            onUpdateCategoryColor={handleUpdateCategoryColor} 
-          />
+          <Playlist videos={videos} categories={categories} categoryColors={categoryColors} currentVideo={currentVideo} onSelect={handleSelectVideo} onRemove={handleRemoveVideo} onToggleFavorite={handleToggleFavorite} userFavorites={currentUserFavorites} onAddRandom={() => { const v = getSurpriseVideo(); setVideos(p => [v, ...p]); setCurrentVideoId(v.id); }} onAddManualVideo={handleManualAdd} onMoveVideo={() => {}} onPurgeAll={handlePurgeAll} activeTab={playlistTab} setActiveTab={setPlaylistTab} isAuthorized={isAuthorized} onAddCategory={handleAddCategory} onRemoveCategory={handleRemoveCategory} onUpdateCategoryColor={handleUpdateCategoryColor} />
         </aside>
 
         <section className="flex-1 flex flex-col bg-transparent overflow-y-auto min-w-0 custom-scrollbar">
           <div className="w-full flex flex-col pt-8 gap-0">
             <div className="flex items-center justify-between px-8 mb-6">
-              <h2 className="text-red-600 font-black uppercase text-[10px] tracking-[0.4em] flex items-center gap-3">
-                <span className="w-1 h-4 bg-red-600 rounded-full"></span>
-                {currentVideo ? "Current Video Stream" : "Select Video"}
-              </h2>
+              <h2 className="text-red-600 font-black uppercase text-[10px] tracking-[0.4em] flex items-center gap-3"><span className="w-1 h-4 bg-red-600 rounded-full"></span>{currentVideo ? "Current Video Stream" : "Select Video"}</h2>
             </div>
-
             <div className="px-8 w-full" ref={playerContainerRef}>
                <div className="w-full max-h-[calc(100vh-240px)] aspect-video bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl relative mx-auto">
                 {currentVideo ? (
-                  <VideoPlayer 
-                    key={currentVideo.id} 
-                    video={currentVideo} 
-                    isFavorite={currentUserFavorites.includes(currentVideo.id)}
-                    isPlaying={isPlaying} 
-                    onPlayStateChange={setIsPlaying} 
-                    onToggleLike={() => handleToggleLike(currentVideo.id)} 
-                    onToggleDislike={() => handleToggleDislike(currentVideo.id)} 
-                    onToggleFavorite={() => handleToggleFavorite(currentVideo.id)} 
-                    onViewIncrement={() => handleIncrementView(currentVideo.id)} 
-                    onWriteReview={() => { setReviewInitialTab('Write'); setActiveSecondaryView('reviews'); }} 
-                  />
+                  <VideoPlayer key={currentVideo.id} video={currentVideo} isFavorite={currentUserFavorites.includes(currentVideo.id)} isPlaying={isPlaying} onPlayStateChange={setIsPlaying} onToggleLike={() => handleToggleLike(currentVideo.id)} onToggleDislike={() => handleToggleDislike(currentVideo.id)} onToggleFavorite={() => handleToggleFavorite(currentVideo.id)} onViewIncrement={() => handleIncrementView(currentVideo.id)} onWriteReview={() => { setReviewInitialTab('Write'); setActiveSecondaryView('reviews'); }} />
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-slate-600 uppercase font-black text-xs gap-4 bg-slate-950">
-                    <i className="fa-solid fa-cloud fa-3x animate-pulse text-slate-900"></i> Select Video
-                  </div>
+                  <div className="h-full flex flex-col items-center justify-center text-slate-600 uppercase font-black text-xs gap-4 bg-slate-950"><i className="fa-solid fa-cloud fa-3x animate-pulse text-slate-900"></i> Select Video</div>
                 )}
               </div>
             </div>
-
             {currentVideo && (
               <div className="w-full animate-fade-in mt-6 px-8">
                 <div className="bg-white/5 border border-white/5 rounded-3xl flex flex-wrap items-center justify-between px-8 py-4 w-full gap-4">
@@ -465,30 +363,18 @@ const App: React.FC = () => {
                       <div className="flex items-center gap-2"><span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Views::</span><span className="text-[13px] font-black text-white">{currentVideo.viewCount.toLocaleString()}</span></div>
                       <div className="flex items-center gap-2"><span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Likes::</span><span className="text-[13px] font-black text-white">{currentVideo.likeCount.toLocaleString()}</span></div>
                       <button onClick={() => { setReviewInitialTab('Read'); setActiveSecondaryView('reviews'); }} className="text-[10px] font-black uppercase tracking-widest text-purple-500 hover:text-purple-400 flex items-center gap-2 transition-colors"><i className="fa-solid fa-message text-[11px]"></i><span>Reviews::</span><span className="text-[13px] font-black text-white ml-0.5">{(currentVideo.reviews?.length || 0).toLocaleString()}</span></button>
-                      <button onClick={() => setActiveSecondaryView(v => v === 'vault' ? 'none' : 'vault')} className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 flex items-center gap-2 transition-colors"><i className="fa-solid fa-heart text-[11px]"></i><span>{isUserLocked ? (currentUser === 'NEURAL_NODE_01' ? 'Vault' : `${currentUser.replace(/_/g, ' ')}'S VAULT`) : 'Vault'}::</span><span className="text-[13px] font-black text-white ml-0.5">{vaultCount.toLocaleString()}</span></button>
+                      <button onClick={() => setActiveSecondaryView(v => v === 'vault' ? 'none' : 'vault')} className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 flex items-center gap-2 transition-colors"><i className="fa-solid fa-heart text-[11px]"></i><span>{isUserLocked ? (currentUser === MASTER_IDENTITY ? 'Code Vault' : `${currentUser.replace(/_/g, ' ')}'S VAULT`) : 'Vault'}::</span><span className="text-[13px] font-black text-white ml-0.5">{vaultCount.toLocaleString()}</span></button>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-
             <div className="px-8 w-full mt-4 pb-20">
               {activeSecondaryView === 'moderation' && (
-                <ModerationPanel videos={videos} categories={categories} categoryColors={categoryColors} onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))} onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))} onAddVideo={handleManualAdd} onRemoveVideo={handleRemoveVideo} onResetStats={handleResetStats} onClearCategories={handleClearCategories} onClose={() => setActiveSecondaryView('none')} onSimulateSync={triggerSyncSequence} isCheckingSync={isCheckingSync} cloudVersion={cloudVersion} onCheckVersion={() => checkVersion(true)} onHardSync={handleHardSyncSource} />
+                <ModerationPanel videos={videos} categories={categories} categoryColors={categoryColors} onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))} onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))} onAddVideo={handleManualAdd} onRemoveVideo={handleRemoveVideo} onResetStats={handleResetStats} onClearCategories={handleClearCategories} onClose={() => setActiveSecondaryView('none')} onSimulateSync={triggerSyncSequence} isCheckingSync={isCheckingSync} cloudVersion={cloudVersion} onCheckVersion={() => checkVersion(true)} onHardSync={handleHardSyncSource} currentUser={currentUser} />
               )}
               {activeSecondaryView === 'vault' && (
-                <VaultGallery 
-                  videos={videos.filter(v => currentUserFavorites.includes(v.id))} 
-                  categoryColors={categoryColors} 
-                  currentVideo={currentVideo!} 
-                  onSelect={(v) => { setCurrentVideoId(v.id); setActiveSecondaryView('none'); }} 
-                  onRemove={handleRemoveVideo} 
-                  onToggleFavorite={handleToggleFavorite} 
-                  isOpen={true} 
-                  onClose={() => setActiveSecondaryView('none')} 
-                  isAuthorized={isAuthorized} 
-                  onMoveVideo={() => {}} 
-                />
+                <VaultGallery videos={videos.filter(v => currentUserFavorites.includes(v.id))} categoryColors={categoryColors} currentVideo={currentVideo!} onSelect={(v) => { setCurrentVideoId(v.id); setActiveSecondaryView('none'); }} onRemove={handleRemoveVideo} onToggleFavorite={handleToggleFavorite} isOpen={true} onClose={() => setActiveSecondaryView('none')} isAuthorized={isAuthorized} onMoveVideo={() => {}} />
               )}
               {activeSecondaryView === 'reviews' && currentVideo && (
                 <FloatingReviewHub video={currentVideo} isOpen={true} initialTab={reviewInitialTab} onClose={() => setActiveSecondaryView('none')} onSubmitReview={(r, t) => { const review = { id: `r-${Date.now()}`, rating: r, text: t, user: currentUser, timestamp: Date.now(), isApproved: false }; setVideos(prev => prev.map(v => v.id === currentVideo.id ? { ...v, reviews: [review, ...(v.reviews || [])] } : v)); }} />
@@ -500,19 +386,7 @@ const App: React.FC = () => {
 
       {showLoginOverlay && (
         <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-6 backdrop-blur-md">
-          <LoginGate 
-            onLogin={(p, remember) => { 
-              if(p === ADMIN_PASSWORD) { 
-                setIsAuthorized(true); 
-                if (remember) localStorage.setItem(AUTH_KEY, 'true');
-                setShowLoginOverlay(false); 
-                return true; 
-              } 
-              return false; 
-            }} 
-            onRestore={handleRestoreNode}
-            onClose={() => setShowLoginOverlay(false)} 
-          />
+          <LoginGate onLogin={(p, remember) => { if(p === ADMIN_PASSWORD) { setIsAuthorized(true); if (remember) localStorage.setItem(AUTH_KEY, 'true'); setShowLoginOverlay(false); return true; } return false; }} onRestore={handleRestoreNode} onClose={() => setShowLoginOverlay(false)} />
         </div>
       )}
     </div>

@@ -6,6 +6,12 @@ import { VideoItem, VideoCategory, Review } from '../types';
 export const LIBRARY_VERSION = 4191;
 
 /**
+ * MASTER_IDENTITY: The hardcoded default user for this build.
+ * Changing this here saves it "in the code" for online deployment.
+ */
+export const MASTER_IDENTITY = "NEURAL_NODE_01";
+
+/**
  * BASE LIBRARY DATA
  * A high-end cinematic playlist designed for a world-class experience.
  */

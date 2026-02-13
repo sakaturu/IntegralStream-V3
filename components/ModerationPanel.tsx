@@ -16,11 +16,10 @@ interface ModerationPanelProps {
   onClose: () => void;
   onSimulateSync?: () => void;
   isCheckingSync: boolean;
-  syncStatus: 'idle' | 'success';
-  lastCheckTime: string;
   cloudVersion: number;
   onCheckVersion: () => void;
   onHardSync: () => void;
+  currentUser: string;
 }
 
 interface PendingReview extends Review {
@@ -38,11 +37,10 @@ const ModerationPanel: React.FC<ModerationPanelProps> = ({
   onClose,
   onSimulateSync,
   isCheckingSync,
-  syncStatus,
-  lastCheckTime,
   cloudVersion,
   onCheckVersion,
-  onHardSync
+  onHardSync,
+  currentUser
 }) => {
   const [activeTab, setActiveTab] = useState<'Queue' | 'Forge' | 'Developer'>('Queue');
   const [copySuccess, setCopySuccess] = useState(false);
@@ -93,14 +91,63 @@ const ModerationPanel: React.FC<ModerationPanelProps> = ({
       url: v.url,
       thumbnail: v.thumbnail || `https://img.youtube.com/vi/${v.url}/mqdefault.jpg`
     }));
-    return `const INITIAL_VIDEO_DATA: any[] = ${JSON.stringify(data, null, 2)};`;
-  }, [videos]);
+    return `import { VideoItem, VideoCategory, Review } from '../types';
+
+export const LIBRARY_VERSION = ${LIBRARY_VERSION};
+
+/**
+ * MASTER_IDENTITY: Saved from Terminal Forge.
+ * Deploying this code will set "${currentUser}" as the global default.
+ */
+export const MASTER_IDENTITY = "${currentUser}";
+
+const INITIAL_VIDEO_DATA: any[] = ${JSON.stringify(data, null, 2)};
+
+export const getSampleLibrary = (): VideoItem[] => {
+  return INITIAL_VIDEO_DATA.map((item, idx) => ({
+    ...item,
+    timestamp: Date.now() - (idx * 100000),
+    status: 'ready',
+    viewCount: 0,
+    likeCount: 0,
+    dislikeCount: 0,
+    rating: 0,
+    isFavorite: false, 
+    isLiked: false,
+    isDisliked: false,
+    reviews: []
+  }));
+};
+
+export const getSurpriseVideo = (): VideoItem => {
+  const pool = ['dQw4w9WgXcQ', 'CHSnz0DQw68', '5Wn4M_9-H9I', 'X_JBFLs3vAk', 'LXO-jKksQkM'];
+  const id = pool[Math.floor(Math.random() * pool.length)];
+  return {
+    id: \`surprise-\${Date.now()}\`,
+    prompt: "Neural Surprise Signal",
+    category: 'Fav. Pick',
+    url: id,
+    timestamp: Date.now(),
+    status: 'ready',
+    viewCount: 0,
+    likeCount: 0,
+    dislikeCount: 0,
+    rating: 0,
+    isFavorite: false,
+    isLiked: false,
+    isDisliked: false,
+    reviews: []
+  };
+};`;
+  }, [videos, currentUser]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(generatedCode);
     setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
+    setTimeout(() => setCopyFeedback(false), 2000);
   };
+
+  const setCopyFeedback = (val: boolean) => setCopySuccess(val);
 
   const handleTriggerHardSync = () => {
     setIsSyncing(true);
@@ -208,13 +255,13 @@ const ModerationPanel: React.FC<ModerationPanelProps> = ({
                  </div>
                  
                  <div className="p-6 rounded-3xl bg-purple-600/5 border border-purple-500/20 flex flex-col">
-                    <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-1 flex items-center gap-2"><i className="fa-solid fa-cloud-arrow-up text-purple-500"></i>PUSH: Save to GitHub</h4>
+                    <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-1 flex items-center gap-2"><i className="fa-solid fa-cloud-arrow-up text-purple-500"></i>PUSH: Save Identity & Data</h4>
                     <p className="text-[8px] text-slate-500 uppercase font-bold mb-6">Update Repository from Browser</p>
                     <div className="space-y-4 text-[9px] text-slate-400 font-bold uppercase leading-tight">
-                       <div className="flex gap-3 items-start"><span className="w-5 h-5 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500">1</span><span>Copy the code below</span></div>
-                       <div className="flex gap-3 items-start"><span className="w-5 h-5 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500">2</span><span>Open <span className="text-purple-400">sampleData.ts</span> on your Hard Drive</span></div>
+                       <div className="flex gap-3 items-start"><span className="w-5 h-5 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500">1</span><span>Copy code below (includes current name: <b>{currentUser}</b>)</span></div>
+                       <div className="flex gap-3 items-start"><span className="w-5 h-5 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500">2</span><span>Open <span className="text-purple-400">sampleData.ts</span> on your machine</span></div>
                        <div className="flex gap-3 items-start"><span className="w-5 h-5 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500">3</span><span>Paste and Replace the content</span></div>
-                       <div className="flex gap-3 items-start"><span className="w-5 h-5 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500">4</span><span>Push to GitHub via Git</span></div>
+                       <div className="flex gap-3 items-start"><span className="w-5 h-5 shrink-0 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-500">4</span><span>Push to Vercel/GitHub to save "Online"</span></div>
                     </div>
                  </div>
               </div>
