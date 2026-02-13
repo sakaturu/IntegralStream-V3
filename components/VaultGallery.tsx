@@ -54,11 +54,11 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
 
   return (
     <div className="w-full animate-fade-in mt-4">
-      <div className="bg-[#0f172a]/80 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-red-500/20 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] relative overflow-hidden ring-1 ring-red-500/10">
+      <div className="bg-[#0f172a]/80 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-blue-500/20 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] relative overflow-hidden ring-1 ring-blue-500/10">
         <div className="flex items-center justify-between mb-8">
           <div className="flex flex-col">
             <h3 className="text-[13px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i className="fa-solid fa-vault text-red-600"></i>
+              <i className="fa-solid fa-vault text-blue-600"></i>
               {currentUser.replace(/_/g, ' ')}'S ARCHIVE
             </h3>
             <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-1 pl-6">Secure Neural Persona Data</p>
@@ -126,21 +126,21 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
                   <div className="absolute top-0 bottom-0 right-3 py-3 flex flex-col items-center justify-center z-30 opacity-30 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setConfirmingDeleteId(video.id); }} 
-                      className="text-slate-400 hover:text-red-500 transition-all hover:scale-125 active:scale-90"
+                      className="text-slate-400 hover:text-blue-500 transition-all hover:scale-125 active:scale-90"
                     >
                       <i className="fa-solid fa-xmark text-[13px]"></i>
                     </button>
                   </div>
 
                   {confirmingDeleteId === video.id && (
-                    <div className="absolute inset-0 z-50 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl flex items-center justify-between px-6 animate-fade-in border border-red-500/20" onClick={(e) => e.stopPropagation()}>
+                    <div className="absolute inset-0 z-50 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl flex items-center justify-between px-6 animate-fade-in border border-blue-500/20" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Eviction Protocol</span>
+                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Eviction Protocol</span>
                         <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Remove from vault</span>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => setConfirmingDeleteId(null)} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest text-slate-400">Abort</button>
-                        <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.id); setConfirmingDeleteId(null); }} className="px-4 py-2 rounded-xl bg-red-600 text-white text-[8px] font-black uppercase tracking-widest shadow-lg">Confirm</button>
+                        <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.id); setConfirmingDeleteId(null); }} className="px-4 py-2 rounded-xl bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest shadow-lg">Confirm</button>
                       </div>
                     </div>
                   )}

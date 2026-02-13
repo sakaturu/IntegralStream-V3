@@ -83,7 +83,7 @@ const LoginGate: React.FC<LoginGateProps> = ({
         <div className="flex bg-black/40 p-1 rounded-xl border border-white/5 mb-2">
            <button 
             onClick={() => { setActiveTab('Identify'); setError(false); }}
-            className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'Identify' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+            className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'Identify' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
            >
             {isIdentityLocked ? 'Switch' : 'Identify'}
            </button>
@@ -121,7 +121,7 @@ const LoginGate: React.FC<LoginGateProps> = ({
                   value={personaName}
                   onChange={(e) => setPersonaName(e.target.value.toUpperCase())}
                   disabled={isVerifying}
-                  className={`w-full bg-slate-950/80 border ${error ? 'border-red-500' : 'border-white/10'} rounded-xl px-6 py-4 text-center text-base tracking-[0.2em] text-white focus:outline-none focus:border-red-500/50 transition-all font-mono placeholder:tracking-normal placeholder:text-[9px] placeholder:font-black`}
+                  className={`w-full bg-slate-950/80 border ${error ? 'border-red-500' : 'border-white/10'} rounded-xl px-6 py-4 text-center text-base tracking-[0.2em] text-white focus:outline-none focus:border-blue-500/50 transition-all font-mono placeholder:tracking-normal placeholder:text-[9px] placeholder:font-black`}
                 />
               ) : activeTab === 'Terminal' ? (
                 <input 
@@ -158,10 +158,10 @@ const LoginGate: React.FC<LoginGateProps> = ({
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
                 />
-                <div className={`absolute inset-0 rounded-full transition-all duration-300 ${remember ? 'bg-red-600 shadow-[0_0_12px_rgba(239,68,68,0.4)]' : 'bg-slate-900'}`}></div>
+                <div className={`absolute inset-0 rounded-full transition-all duration-300 ${remember ? 'bg-blue-600 shadow-[0_0_12px_rgba(59,130,246,0.4)]' : 'bg-slate-900'}`}></div>
                 <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-all duration-300 transform ${remember ? 'translate-x-4' : 'translate-x-0'}`}></div>
               </div>
-              <span className={`text-[8px] font-black uppercase tracking-widest ml-3 ${remember ? 'text-red-400' : 'text-slate-500'}`}>
+              <span className={`text-[8px] font-black uppercase tracking-widest ml-3 ${remember ? 'text-blue-400' : 'text-slate-500'}`}>
                 Persist Persona
               </span>
             </label>
@@ -176,7 +176,7 @@ const LoginGate: React.FC<LoginGateProps> = ({
               : restoreSuccess 
               ? 'bg-green-600 text-white'
               : activeTab === 'Identify' 
-              ? 'bg-red-600 text-white hover:bg-red-500'
+              ? 'bg-blue-600 text-white hover:bg-blue-500'
               : 'bg-white text-slate-950 hover:bg-blue-50'
             }`}
           >

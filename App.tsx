@@ -44,9 +44,9 @@ const DEFAULT_CAT_COLORS: Record<string, string> = {
   'Meditation': '#10b981',
   'Tribal': '#f97316',
   'Dance': '#64748b',
-  'Integral Serenity': '#800020',
+  'Integral Serenity': '#3b82f6', // Changed from wine red to blue
   'Permia Community': '#d97706',
-  'Spanish': '#ef4444',
+  'Spanish': '#3b82f6', // Changed from red to blue
   'Fav. Pick': '#3b82f6',
   'Environment': '#22c55e',
   'Other': '#94a3b8'
@@ -54,11 +54,11 @@ const DEFAULT_CAT_COLORS: Record<string, string> = {
 
 const IntegralLogo = () => (
   <svg viewBox="0 0 100 100" className="w-10 h-10 transition-transform duration-1000 ease-in-out hover:rotate-[360deg]">
-    <path d="M50 5 C58 20 58 40 50 52 C42 40 42 20 50 5Z" fill="#ef4444" />
-    <path d="M28 25 C12 30 12 50 28 60 C36 50 36 30 28 25Z" fill="#ef4444" transform="rotate(-15, 28, 42.5)" />
-    <path d="M72 25 C88 30 88 50 72 60 C64 50 64 30 72 25Z" fill="#ef4444" transform="rotate(15, 72, 42.5)" />
+    <path d="M50 5 C58 20 58 40 50 52 C42 40 42 20 50 5Z" fill="#3b82f6" />
+    <path d="M28 25 C12 30 12 50 28 60 C36 50 36 30 28 25Z" fill="#3b82f6" transform="rotate(-15, 28, 42.5)" />
+    <path d="M72 25 C88 30 88 50 72 60 C64 50 64 30 72 25Z" fill="#3b82f6" transform="rotate(15, 72, 42.5)" />
     <circle cx="50" cy="78" r="11" fill="#475569" />
-    <path d="M15 55 C15 85 40 95 50 95" fill="none" stroke="#ef4444" strokeWidth="7" strokeLinecap="round" />
+    <path d="M15 55 C15 85 40 95 50 95" fill="none" stroke="#3b82f6" strokeWidth="7" strokeLinecap="round" />
     <path d="M85 55 C85 85 60 95 50 95" fill="none" stroke="#475569" strokeWidth="7" strokeLinecap="round" />
   </svg>
 );
@@ -296,7 +296,7 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveSecondaryView('none')}>
           <IntegralLogo />
           <div className="flex flex-col">
-            <h1 className="font-black text-xl uppercase tracking-tighter leading-none text-red-600">IntegralStream</h1>
+            <h1 className="font-black text-xl uppercase tracking-tighter leading-none text-blue-600">IntegralStream</h1>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Personalized Archive</p>
             </div>
@@ -307,25 +307,25 @@ const App: React.FC = () => {
           <div className="flex flex-col items-end relative group">
             <div 
               onClick={() => isUserLocked ? handleLogout() : setShowLoginOverlay(true)}
-              className={`px-4 h-11 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center gap-3 transition-all cursor-pointer hover:bg-red-600/20`}
+              className={`px-4 h-11 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center gap-3 transition-all cursor-pointer hover:bg-blue-600/20`}
             >
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-1.5">
                    {isUserLocked ? (
-                     <i className="fa-solid fa-lock text-[7px] text-red-500/60 group-hover:hidden"></i>
+                     <i className="fa-solid fa-lock text-[7px] text-blue-500/60 group-hover:hidden"></i>
                    ) : currentUser === MASTER_IDENTITY ? (
                      <i className="fa-solid fa-code text-[7px] text-blue-500"></i>
                    ) : (
                      <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
                    )}
                    {isUserLocked && <i className="fa-solid fa-arrow-right-from-bracket text-[7px] text-white hidden group-hover:inline-block"></i>}
-                   <span className="text-[7px] font-black text-red-500/60 uppercase tracking-widest group-hover:text-white transition-colors">
+                   <span className="text-[7px] font-black text-blue-500/60 uppercase tracking-widest group-hover:text-white transition-colors">
                     {isUserLocked ? 'Verified (Disconnect)' : 'Identified Persona'}
                    </span>
                 </div>
-                <span className="text-[10px] font-black text-red-500 uppercase tracking-widest group-hover:text-red-400 transition-colors">{currentUser}</span>
+                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest group-hover:text-blue-400 transition-colors">{currentUser}</span>
               </div>
-              <i className={`fa-solid ${isUserLocked ? 'fa-user-lock' : 'fa-id-badge'} text-red-500 text-xs`}></i>
+              <i className={`fa-solid ${isUserLocked ? 'fa-user-lock' : 'fa-id-badge'} text-blue-500 text-xs`}></i>
             </div>
           </div>
 
@@ -357,7 +357,7 @@ const App: React.FC = () => {
         <section className="flex-1 flex flex-col bg-transparent overflow-y-auto min-w-0 custom-scrollbar">
           <div className="w-full flex flex-col pt-8 gap-0">
             <div className="flex items-center justify-between px-8 mb-6">
-              <h2 className="text-red-600 font-black uppercase text-[10px] tracking-[0.4em] flex items-center gap-3"><span className="w-1 h-4 bg-red-600 rounded-full"></span>{currentVideo ? "Current Video Stream" : "Select Video"}</h2>
+              <h2 className="text-blue-600 font-black uppercase text-[10px] tracking-[0.4em] flex items-center gap-3"><span className="w-1 h-4 bg-blue-600 rounded-full"></span>{currentVideo ? "Current Video Stream" : "Select Video"}</h2>
             </div>
             <div className="px-8 w-full" ref={playerContainerRef}>
                <div className="w-full max-h-[calc(100vh-240px)] aspect-video bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl relative mx-auto">
@@ -377,7 +377,7 @@ const App: React.FC = () => {
                       <div className="flex items-center gap-2"><span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Views::</span><span className="text-[13px] font-black text-white">{currentVideo.viewCount.toLocaleString()}</span></div>
                       <div className="flex items-center gap-2"><span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Likes::</span><span className="text-[13px] font-black text-white">{currentVideo.likeCount.toLocaleString()}</span></div>
                       <button onClick={() => { setReviewInitialTab('Read'); setActiveSecondaryView('reviews'); }} className="text-[10px] font-black uppercase tracking-widest text-purple-500 hover:text-purple-400 flex items-center gap-2 transition-colors"><i className="fa-solid fa-message text-[11px]"></i><span>Reviews::</span><span className="text-[13px] font-black text-white ml-0.5">{(currentVideo.reviews?.length || 0).toLocaleString()}</span></button>
-                      <button onClick={() => setActiveSecondaryView(v => v === 'vault' ? 'none' : 'vault')} className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 flex items-center gap-2 transition-colors"><i className="fa-solid fa-vault text-[11px]"></i><span>{currentUser.replace(/_/g, ' ')}'S VAULT::</span><span className="text-[13px] font-black text-white ml-0.5">{vaultCount.toLocaleString()}</span></button>
+                      <button onClick={() => setActiveSecondaryView(v => v === 'vault' ? 'none' : 'vault')} className="text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 flex items-center gap-2 transition-colors"><i className="fa-solid fa-vault text-[11px]"></i><span>{currentUser.replace(/_/g, ' ')}'S VAULT::</span><span className="text-[13px] font-black text-white ml-0.5">{vaultCount.toLocaleString()}</span></button>
                     </div>
                   </div>
                 </div>
