@@ -172,17 +172,43 @@ const Playlist: React.FC<PlaylistProps> = ({
     };
   };
 
+  const getTabThematicColor = (tabName: string) => {
+    if (tabName === 'All') return '#3b82f6';
+    if (tabName === 'Vault') return '#ef4444';
+    return categoryColors[tabName] || '#94a3b8';
+  };
+
+  const getTabStyles = (tabName: string) => {
+    const color = getTabThematicColor(tabName);
+    const isActive = activeTab === tabName;
+    
+    if (isActive) {
+      return {
+        color: color,
+        backgroundColor: `${color}1A`,
+        borderColor: `${color}4D`,
+        boxShadow: `0 0 12px ${color}33`,
+        transform: 'scale(1.02)'
+      };
+    }
+    
+    return {
+      color: `${color}80`,
+      borderColor: 'transparent',
+      backgroundColor: 'transparent'
+    };
+  };
+
   const renderTab = (tab: { name: string }) => {
     const isDeletable = isAuthorized && !['All', 'Vault'].includes(tab.name);
+    const isActive = activeTab === tab.name;
+    
     return (
       <div key={tab.name} className="relative group/tab">
         <button
           onClick={() => setActiveTab(tab.name as any)}
-          className={`w-full h-7 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center px-1 relative cursor-pointer ${
-            activeTab === tab.name 
-            ? 'bg-white text-slate-950 shadow-md scale-[1.02]' 
-            : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
-          }`}
+          style={getTabStyles(tab.name)}
+          className={`w-full h-7 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center px-1 border relative cursor-pointer`}
         >
           <span className="truncate w-full text-center px-1">{tab.name}</span>
         </button>
@@ -418,7 +444,9 @@ const Playlist: React.FC<PlaylistProps> = ({
             </div>
             
             <div className="flex-1 overflow-hidden flex flex-col justify-center gap-1.5 pr-2">
-              <p className={`text-[14px] font-bold leading-tight truncate ${currentVideo?.id === video.id ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{video.prompt}</p>
+              <p className="text-[14px] font-bold leading-tight truncate transition-colors duration-300 text-white">
+                {video.prompt}
+              </p>
               <div className="flex items-center gap-1.5 w-full">
                 <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border shrink-0 transition-all`} style={getTagStyles(video.category)}>{video.category}</span>
                 <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest shrink-0 border-l border-white/5 pl-1.5 overflow-x-auto custom-scrollbar no-scrollbar">

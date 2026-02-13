@@ -45,8 +45,8 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
     const color = categoryColors[category] || '#64748b';
     return {
       color: color,
-      borderColor: `${color}33`, // 20% opacity hex
-      backgroundColor: `${color}0D`, // 5% opacity hex
+      borderColor: `${color}4D`,
+      backgroundColor: `${color}1A`,
     };
   };
 
@@ -114,7 +114,7 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
                   </div>
 
                   <div className="flex-1 overflow-hidden flex flex-col justify-center gap-1.5 pr-2">
-                    <p className={`text-[13px] font-bold leading-tight truncate ${currentVideo?.id === video.id ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                    <p className="text-[13px] font-bold leading-tight truncate transition-colors duration-300 text-white">
                       {video.prompt}
                     </p>
                     

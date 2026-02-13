@@ -23,6 +23,7 @@ const DEFAULT_CATEGORIES: VideoCategory[] = [
   'Permia Community', 
   'Spanish', 
   'Fav. Pick', 
+  'Environment',
   'Other'
 ];
 
@@ -34,6 +35,7 @@ const DEFAULT_CAT_COLORS: Record<string, string> = {
   'Permia Community': '#facc15',
   'Spanish': '#ef4444',
   'Fav. Pick': '#3b82f6',
+  'Environment': '#22c55e',
   'Other': '#64748b'
 };
 
@@ -66,8 +68,8 @@ const App: React.FC = () => {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const checkSyncLock = useRef(false);
 
+  // Use a standard relative reload to avoid URL construction errors like "googhttps"
   const triggerReload = useCallback(() => {
-    // Standard reload is the most stable for Vercel/GitHub deployments
     window.location.reload();
   }, []);
 
@@ -78,13 +80,13 @@ const App: React.FC = () => {
 
   const handleHardSyncSource = useCallback(() => {
     setIsSyncingLive(true);
-    // Remove local storage to force the app to use the hardcoded values in sampleData.ts (the GitHub source)
+    // Wipes all local session overrides
     localStorage.removeItem(DATA_KEY);
     localStorage.removeItem(CAT_KEY);
     localStorage.removeItem(CAT_COLORS_KEY);
     localStorage.removeItem(VERSION_KEY);
     
-    console.log("%c[Neural Link] Wiping local session and pulling fresh GitHub data...", "color: #3b82f6; font-weight: bold;");
+    console.log("%c[Neural Link] Resetting local matrix to source code defaults...", "color: #3b82f6; font-weight: bold;");
     setTimeout(triggerReload, 2000);
   }, [triggerReload]);
 
@@ -97,8 +99,8 @@ const App: React.FC = () => {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), 8000); 
 
-      // Fetch index.html directly from the root to find the <meta name="version"> tag
-      const response = await fetch(`./index.html?t=${Date.now()}`, { 
+      // Use a relative path to avoid absolute URL rewrites in sandboxes
+      const response = await fetch(`./index.html?cb=${Date.now()}`, { 
         cache: 'no-store',
         signal: controller.signal
       });
@@ -116,7 +118,6 @@ const App: React.FC = () => {
         const metaVersion = parseInt(metaVersionStr, 10);
         setCloudVersion(metaVersion);
         
-        // If GitHub has a newer version, trigger the auto-sync
         if (metaVersion > LIBRARY_VERSION) {
           triggerSyncSequence();
           return;
@@ -128,8 +129,8 @@ const App: React.FC = () => {
         setTimeout(() => setSyncStatus('idle'), 3000);
       }
     } catch (e) {
-      console.warn('[Neural Link] Handshake check timed out');
-      if (manual) alert("Handshake timed out. Check your Vercel connection.");
+      console.warn('[Neural Link] Handshake check failed or timed out');
+      if (manual) alert("Handshake timed out. Check your connection.");
     } finally {
       setIsCheckingSync(false);
       checkSyncLock.current = false;
@@ -287,9 +288,9 @@ const App: React.FC = () => {
              </div>
            </div>
            <div className="flex flex-col items-center mt-10">
-             <h2 className="text-xl font-black uppercase tracking-[0.5em] text-white animate-pulse">Cloud Synchronization</h2>
+             <h2 className="text-xl font-black uppercase tracking-[0.5em] text-white animate-pulse">Neural Handshake</h2>
              <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-4 max-w-xs text-center leading-relaxed">
-               Syncing with GitHub/Vercel production build. Resetting local matrix...
+               Syncing with GitHub repository. Cleansing local overrides...
              </p>
            </div>
         </div>
