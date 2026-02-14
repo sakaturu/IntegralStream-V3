@@ -41,15 +41,15 @@ const DEFAULT_CATEGORIES: VideoCategory[] = [
 ];
 
 const DEFAULT_CAT_COLORS: Record<string, string> = {
-  'Meditation': '#10b981',
-  'Tribal': '#f97316',
-  'Dance': '#64748b',
-  'Integral Serenity': '#3b82f6', 
-  'Permia Community': '#d97706',
-  'Spanish': '#3b82f6', 
-  'Fav. Pick': '#3b82f6',
-  'Environment': '#22c55e',
-  'Other': '#94a3b8'
+  'Meditation': '#34d399',
+  'Tribal': '#fb923c',
+  'Dance': '#94a3b8',
+  'Integral Serenity': '#60a5fa', 
+  'Permia Community': '#facc15',
+  'Spanish': '#60a5fa', 
+  'Fav. Pick': '#f472b6',
+  'Environment': '#4ade80',
+  'Other': '#cbd5e1'
 };
 
 const IntegralLogo = () => (

@@ -24,9 +24,9 @@ interface PlaylistProps {
 }
 
 const COLOR_PALETTE = [
-  ['#3b82f6', '#60a5fa', '#2563eb', '#1d4ed8', '#0ea5e9', '#38bdf8', '#0284c7', '#0369a1', '#0c4a6e', '#6366f1', '#818cf8', '#4f46e5'],
-  ['#10b981', '#34d399', '#059669', '#22c55e', '#4ade80', '#16a34a', '#84cc16', '#a3e635', '#65a30d', '#14b8a6', '#2dd4bf', '#0d9488'],
-  ['#f97316', '#fb923c', '#ea580c', '#f59e0b', '#fbbf24', '#d97706', '#facc15', '#ca8a04', '#94a3b8', '#8b5cf6', '#a78bfa', '#7c3aed']
+  ['#60a5fa', '#93c5fd', '#3b82f6', '#0ea5e9', '#38bdf8', '#7dd3fc', '#06b6d4', '#22d3ee', '#67e8f9', '#818cf8', '#a5b4fc', '#6366f1'],
+  ['#34d399', '#6ee7b7', '#10b981', '#4ade80', '#86efac', '#22c55e', '#a3e635', '#bef264', '#84cc16', '#2dd4bf', '#5eead4', '#14b8a6'],
+  ['#fb923c', '#fdba74', '#f97316', '#fbbf24', '#fde047', '#facc15', '#f472b6', '#fbcfe8', '#ec4899', '#cbd5e1', '#e2e8f0', '#94a3b8']
 ];
 
 const Playlist: React.FC<PlaylistProps> = ({ 
