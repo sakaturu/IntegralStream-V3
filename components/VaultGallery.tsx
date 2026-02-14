@@ -100,7 +100,7 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
                   </div>
 
                   <div className="flex-1 overflow-hidden flex flex-col justify-center gap-1.5 pr-2">
-                    <p className="text-[13px] font-bold leading-tight truncate transition-colors duration-300 text-white">
+                    <p className="text-[13px] font-bold leading-tight truncate transition-colors duration-300 text-slate-400">
                       {video.prompt}
                     </p>
                     
@@ -126,21 +126,21 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
                   <div className="absolute top-0 bottom-0 right-3 py-3 flex flex-col items-center justify-center z-30 opacity-30 group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setConfirmingDeleteId(video.id); }} 
-                      className="text-slate-400 hover:text-blue-500 transition-all hover:scale-125 active:scale-90"
+                      className="text-slate-400 hover:text-red-500 transition-all hover:scale-125 active:scale-90"
                     >
                       <i className="fa-solid fa-xmark text-[13px]"></i>
                     </button>
                   </div>
 
                   {confirmingDeleteId === video.id && (
-                    <div className="absolute inset-0 z-50 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl flex items-center justify-between px-6 animate-fade-in border border-blue-500/20" onClick={(e) => e.stopPropagation()}>
+                    <div className="absolute inset-0 z-50 bg-[#0f172a]/95 backdrop-blur-xl rounded-2xl flex items-center justify-between px-6 animate-fade-in border border-red-500/20" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Eviction Protocol</span>
+                        <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Eviction Protocol</span>
                         <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Remove from vault</span>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => setConfirmingDeleteId(null)} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest text-slate-400">Abort</button>
-                        <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.id); setConfirmingDeleteId(null); }} className="px-4 py-2 rounded-xl bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest shadow-lg">Confirm</button>
+                        <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.id); setConfirmingDeleteId(null); }} className="px-4 py-2 rounded-xl bg-red-600 text-white text-[8px] font-black uppercase tracking-widest shadow-lg">Confirm</button>
                       </div>
                     </div>
                   )}

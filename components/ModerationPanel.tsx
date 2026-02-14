@@ -237,7 +237,7 @@ export const getSurpriseVideo = (): VideoItem => {
                     <div key={v.id} className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between group">
                       <div className="flex items-center gap-3 overflow-hidden text-ellipsis">
                         <div className="w-10 h-6 rounded bg-slate-900 overflow-hidden shrink-0"><img src={`https://img.youtube.com/vi/${v.url}/mqdefault.jpg`} className="w-full h-full object-cover opacity-50" /></div>
-                        <div className="truncate"><p className="text-[10px] font-black text-white truncate">{v.prompt}</p></div>
+                        <div className="truncate"><p className="text-[10px] font-black text-slate-400 truncate">{v.prompt}</p></div>
                       </div>
                       <button onClick={() => onRemoveVideo(v.id)} className="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i className="fa-solid fa-trash-can text-[10px]"></i></button>
                     </div>
