@@ -291,7 +291,7 @@ const Playlist: React.FC<PlaylistProps> = ({
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.id); }} 
-                  className={`transition-all hover:scale-125 ${isFavorited ? 'text-red-500 scale-110' : 'text-slate-600 hover:text-white'}`}
+                  className={`transition-all hover:scale-125 ${isFavorited ? 'text-[#ff3b3b] scale-110' : 'text-slate-600 hover:text-white'}`}
                 >
                   <i className={`fa-${isFavorited ? 'solid' : 'regular'} fa-heart text-[11px]`}></i>
                 </button>

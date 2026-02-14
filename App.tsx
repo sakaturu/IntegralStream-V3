@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { VideoItem, VideoCategory } from './types';
 import VideoPlayer from './components/VideoPlayer';
@@ -40,31 +41,26 @@ const DEFAULT_CATEGORIES: VideoCategory[] = [
   'Other'
 ];
 
+// Brighter "Neon" Default Palette
 const DEFAULT_CAT_COLORS: Record<string, string> = {
-  'Meditation': '#34d399',
-  'Tribal': '#fb923c',
-  'Dance': '#cbd5e1',
-  'Integral Serenity': '#60a5fa', 
-  'Permia Community': '#facc15',
-  'Spanish': '#818cf8', 
-  'Fav. Pick': '#f472b6',
-  'Environment': '#4ade80',
-  'Other': '#cbd5e1'
+  'Meditation': '#10b981', // Neon Emerald
+  'Tribal': '#f97316',     // Bright Orange
+  'Dance': '#d946ef',     // Electric Magenta
+  'Integral Serenity': '#3b82f6', // Laser Blue
+  'Permia Community': '#fbbf24', // Solar Yellow
+  'Spanish': '#8b5cf6',   // Bright Purple
+  'Fav. Pick': '#ec4899', // Hot Pink
+  'Environment': '#22c55e', // Neon Green
+  'Other': '#94a3b8'
 };
 
 const IntegralLogo = () => (
   <svg viewBox="0 0 100 100" className="w-10 h-10 transition-transform duration-1000 ease-in-out hover:rotate-[360deg]">
-    {/* Top Left Petal - Red */}
     <path d="M35 52 C20 45 10 30 10 15 C25 15 40 25 45 40 Z" fill="#e11d48" transform="rotate(-10, 50, 50)" />
-    {/* Top Middle Petal - Blue */}
     <path d="M50 5 C58 20 58 40 50 52 C42 40 42 20 50 5Z" fill="#0284c7" />
-    {/* Top Right Petal - Orange */}
     <path d="M65 52 C80 45 90 30 90 15 C75 15 60 25 55 40 Z" fill="#f59e0b" transform="rotate(10, 50, 50)" />
-    {/* Bottom Left Base Arc - Light Blue */}
     <path d="M15 55 C15 85 40 95 50 95" fill="none" stroke="#0ea5e9" strokeWidth="9" strokeLinecap="round" />
-    {/* Bottom Right Base Arc - Grey */}
     <path d="M85 55 C85 85 60 95 50 95" fill="none" stroke="#64748b" strokeWidth="9" strokeLinecap="round" />
-    {/* Central Node - Grey */}
     <circle cx="50" cy="78" r="12" fill="#64748b" />
   </svg>
 );
@@ -107,7 +103,6 @@ const App: React.FC = () => {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const checkSyncLock = useRef(false);
 
-  // Persistence Effects
   useEffect(() => {
     localStorage.setItem(USER_KEY, currentUser);
     localStorage.setItem(USER_LOCKED_KEY, isUserLocked ? 'true' : 'false');
@@ -118,7 +113,6 @@ const App: React.FC = () => {
     localStorage.setItem(FAV_MAP_KEY, JSON.stringify(userFavMap));
   }, [userFavMap]);
 
-  // Persona Handshake
   const handleIdentify = (name: string, remember: boolean) => {
     const cleanName = name.trim().toUpperCase().replace(/\s+/g, '_');
     if (cleanName) {
@@ -195,7 +189,6 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [checkVersion]);
 
-  // Data State
   const [categories, setCategories] = useState<VideoCategory[]>(() => {
     const saved = localStorage.getItem(CAT_KEY);
     return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
@@ -238,10 +231,16 @@ const App: React.FC = () => {
     localStorage.setItem(CAT_COLORS_KEY, JSON.stringify(categoryColors));
   }, [videos, isAuthorized, categories, categoryColors]);
 
-  // Personalization Selectors
   const currentUserFavorites = useMemo(() => userFavMap[currentUser] || [], [userFavMap, currentUser]);
-  const vaultCount = useMemo(() => currentUserFavorites.length, [currentUserFavorites]);
-  const pendingReviewsCount = useMemo(() => videos.reduce((acc, v) => acc + (v.reviews?.filter(r => !r.isApproved).length || 0), 0), [videos]);
+  const vaultCount = useMemo(() => vaultCountCount(currentUserFavorites), [currentUserFavorites]);
+  function vaultCountCount(favs: string[]) { return favs.length; }
+
+  // FIX: Calculate pendingReviewsCount to resolve the reference error in the header
+  const pendingReviewsCount = useMemo(() => {
+    return videos.reduce((acc, video) => {
+      return acc + (video.reviews?.filter(r => !r.isApproved).length || 0);
+    }, 0);
+  }, [videos]);
 
   const handleRemoveVideo = useCallback((id: string) => {
     setVideos(prev => {
@@ -271,7 +270,8 @@ const App: React.FC = () => {
     setUserFavMap(prev => {
       const userFavs = prev[currentUser] || [];
       const isAlreadyFav = userFavs.includes(id);
-      return { ...prev, [currentUser]: isAlreadyFav ? userFavs.filter(fid => fid !== id) : [...userFavs, id] };
+      const updatedFavs = isAlreadyFav ? userFavs.filter(fid => fid !== id) : [...userFavs, id];
+      return { ...prev, [currentUser]: updatedFavs };
     });
   }, [currentUser]);
 
@@ -280,7 +280,7 @@ const App: React.FC = () => {
   const handleIncrementView = useCallback((id: string) => { setVideos(prev => prev.map(v => v.id === id ? { ...v, viewCount: v.viewCount + 1 } : v)); }, []);
   const handleSelectVideo = useCallback((v: VideoItem) => { if (currentVideoId === v.id) { setIsPlaying(prev => !prev); } else { setCurrentVideoId(v.id); setIsPlaying(true); } }, [currentVideoId]);
 
-  const handleAddCategory = (name: string, color?: string) => { if (!categories.includes(name)) { setCategories(prev => [...prev, name]); setCategoryColors(prev => ({ ...prev, [name]: color || '#cbd5e1' })); } };
+  const handleAddCategory = (name: string, color?: string) => { if (!categories.includes(name)) { setCategories(prev => [...prev, name]); setCategoryColors(prev => ({ ...prev, [name]: color || '#94a3b8' })); } };
   const handleRemoveCategory = (name: string) => { setCategories(prev => prev.filter(c => c !== name)); if (playlistTab === name) setPlaylistTab('All'); };
   
   const currentVideo = useMemo(() => videos.find(v => v.id === currentVideoId) || null, [videos, currentVideoId]);
