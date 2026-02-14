@@ -1,9 +1,9 @@
 import { VideoItem, VideoCategory, Review } from '../types';
 
 /**
- * LIBRARY_VERSION 4200: Hardcoded Master Playlist.
+ * LIBRARY_VERSION 4220: Stats Reset Update.
  */
-export const LIBRARY_VERSION = 4200;
+export const LIBRARY_VERSION = 4220;
 
 /**
  * MASTER_IDENTITY: The hardcoded default user for this build.
@@ -11,11 +11,23 @@ export const LIBRARY_VERSION = 4200;
 export const MASTER_IDENTITY = "NEURAL_NODE_01";
 
 /**
+ * HARDCODED_FAVORITES: Default vault items for the master identity.
+ * These will persist even after browser cache/data is cleared.
+ */
+export const HARDCODED_FAVORITES: Record<string, string[]> = {
+  "NEURAL_NODE_01": [
+    "v-int-001", // Tree of Life
+    "v-permia-001", // Dome Architecture
+    "v-env-001" // Heal the Earth
+  ]
+};
+
+/**
  * BASE LIBRARY DATA
- * A world-class cinematic playlist. All IDs are high-quality cinematic YouTube content.
+ * A world-class cinematic playlist.
  */
 const INITIAL_VIDEO_DATA: any[] = [
-  // Integral Serenity (Ambient / Meditation / Zen)
+  // Integral Serenity
   {
     "id": "v-int-001",
     "prompt": "Tree of Life - Deep Forest Ritual",
@@ -59,7 +71,7 @@ const INITIAL_VIDEO_DATA: any[] = [
     "thumbnail": "https://img.youtube.com/vi/668nreJIm8E/mqdefault.jpg"
   },
 
-  // Permia Community (Sustainable Architecture / Future Living)
+  // Permia Community
   {
     "id": "v-permia-001",
     "prompt": "Dome Architecture - The Geodesic Vision",
@@ -96,7 +108,7 @@ const INITIAL_VIDEO_DATA: any[] = [
     "thumbnail": "https://img.youtube.com/vi/2jBiBvFH5sc/mqdefault.jpg"
   },
 
-  // Environment (Cinematic Earth / Nature)
+  // Environment
   {
     "id": "v-env-001",
     "prompt": "Heal the Earth - Cinematic Nature 4K",
@@ -126,7 +138,7 @@ const INITIAL_VIDEO_DATA: any[] = [
     "thumbnail": "https://img.youtube.com/vi/Zp9fA-YidYk/mqdefault.jpg"
   },
 
-  // Tribal & Dance (Movement / Culture)
+  // Tribal & Dance
   {
     "id": "v-trib-001",
     "prompt": "Desert Echoes - Ritual Dance",
@@ -142,7 +154,7 @@ const INITIAL_VIDEO_DATA: any[] = [
     "thumbnail": "https://img.youtube.com/vi/9yc15Hn06Lw/mqdefault.jpg"
   },
 
-  // Spanish (Localized Wellness Content)
+  // Spanish
   {
     "id": "v-span-001",
     "prompt": "Meditación Guiada - Naturaleza Viva",
@@ -157,10 +169,10 @@ export const getSampleLibrary = (): VideoItem[] => {
     ...item,
     timestamp: Date.now() - (idx * 100000),
     status: 'ready',
-    viewCount: Math.floor(Math.random() * 5000) + 1000,
-    likeCount: Math.floor(Math.random() * 800) + 200,
-    dislikeCount: Math.floor(Math.random() * 50),
-    rating: 4.5,
+    viewCount: 0,
+    likeCount: 0,
+    dislikeCount: 0,
+    rating: 0,
     isFavorite: false, 
     isLiked: false,
     isDisliked: false,

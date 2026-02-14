@@ -6,7 +6,7 @@ import LoginGate from './components/LoginGate';
 import VaultGallery from './components/VaultGallery';
 import FloatingReviewHub from './components/FloatingReviewHub';
 import ModerationPanel from './components/ModerationPanel';
-import { getSampleLibrary, getSurpriseVideo, LIBRARY_VERSION, MASTER_IDENTITY } from './services/sampleData';
+import { getSampleLibrary, getSurpriseVideo, LIBRARY_VERSION, MASTER_IDENTITY, HARDCODED_FAVORITES } from './services/sampleData';
 
 const DATA_KEY = `integral_vault_v${LIBRARY_VERSION}`;
 const VERSION_KEY = `integral_version_v${LIBRARY_VERSION}`;
@@ -54,12 +54,18 @@ const DEFAULT_CAT_COLORS: Record<string, string> = {
 
 const IntegralLogo = () => (
   <svg viewBox="0 0 100 100" className="w-10 h-10 transition-transform duration-1000 ease-in-out hover:rotate-[360deg]">
-    <path d="M50 5 C58 20 58 40 50 52 C42 40 42 20 50 5Z" fill="#3b82f6" />
-    <path d="M28 25 C12 30 12 50 28 60 C36 50 36 30 28 25Z" fill="#3b82f6" transform="rotate(-15, 28, 42.5)" />
-    <path d="M72 25 C88 30 88 50 72 60 C64 50 64 30 72 25Z" fill="#3b82f6" transform="rotate(15, 72, 42.5)" />
-    <circle cx="50" cy="78" r="11" fill="#475569" />
-    <path d="M15 55 C15 85 40 95 50 95" fill="none" stroke="#3b82f6" strokeWidth="7" strokeLinecap="round" />
-    <path d="M85 55 C85 85 60 95 50 95" fill="none" stroke="#475569" strokeWidth="7" strokeLinecap="round" />
+    {/* Top Left Petal - Red */}
+    <path d="M35 52 C20 45 10 30 10 15 C25 15 40 25 45 40 Z" fill="#e11d48" transform="rotate(-10, 50, 50)" />
+    {/* Top Middle Petal - Blue */}
+    <path d="M50 5 C58 20 58 40 50 52 C42 40 42 20 50 5Z" fill="#0284c7" />
+    {/* Top Right Petal - Orange */}
+    <path d="M65 52 C80 45 90 30 90 15 C75 15 60 25 55 40 Z" fill="#f59e0b" transform="rotate(10, 50, 50)" />
+    {/* Bottom Left Base Arc - Light Blue */}
+    <path d="M15 55 C15 85 40 95 50 95" fill="none" stroke="#0ea5e9" strokeWidth="9" strokeLinecap="round" />
+    {/* Bottom Right Base Arc - Grey */}
+    <path d="M85 55 C85 85 60 95 50 95" fill="none" stroke="#64748b" strokeWidth="9" strokeLinecap="round" />
+    {/* Central Node - Grey */}
+    <circle cx="50" cy="78" r="12" fill="#64748b" />
   </svg>
 );
 
@@ -86,7 +92,8 @@ const App: React.FC = () => {
 
   const [userFavMap, setUserFavMap] = useState<Record<string, string[]>>(() => {
     const saved = localStorage.getItem(FAV_MAP_KEY);
-    return saved ? JSON.parse(saved) : {};
+    // FALLBACK TO HARDCODED baseline if storage is empty
+    return saved ? JSON.parse(saved) : HARDCODED_FAVORITES;
   });
 
   const [showLoginOverlay, setShowLoginOverlay] = useState(() => !localStorage.getItem(USER_KEY));
@@ -159,7 +166,7 @@ const App: React.FC = () => {
 
   const triggerReload = useCallback(() => { window.location.reload(); }, []);
   const triggerSyncSequence = useCallback(() => { setIsSyncingLive(true); setTimeout(triggerReload, 1500); }, [triggerReload]);
-  const handleHardSyncSource = useCallback(() => { setIsSyncingLive(true); localStorage.removeItem(DATA_KEY); localStorage.removeItem(CAT_KEY); localStorage.removeItem(CAT_COLORS_KEY); localStorage.removeItem(VERSION_KEY); setTimeout(triggerReload, 2000); }, [triggerReload]);
+  const handleHardSyncSource = useCallback(() => { setIsSyncingLive(true); localStorage.removeItem(DATA_KEY); localStorage.removeItem(CAT_KEY); localStorage.removeItem(CAT_COLORS_KEY); localStorage.removeItem(VERSION_KEY); localStorage.removeItem(FAV_MAP_KEY); setTimeout(triggerReload, 2000); }, [triggerReload]);
 
   const checkVersion = useCallback(async (manual = false) => {
     if (checkSyncLock.current) return;
@@ -357,7 +364,7 @@ const App: React.FC = () => {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="w-[440px] flex-shrink-0 min-w-0 border-r border-white/5 bg-black/20 overflow-y-auto custom-scrollbar">
+        <aside className="w-[490px] flex-shrink-0 min-w-0 border-r border-white/5 bg-black/20 overflow-y-auto custom-scrollbar">
           <Playlist videos={videos} categories={categories} categoryColors={categoryColors} currentVideo={currentVideo} onSelect={handleSelectVideo} onRemove={handleRemoveVideo} onToggleFavorite={handleToggleFavorite} userFavorites={currentUserFavorites} onAddRandom={() => { const v = getSurpriseVideo(); setVideos(p => [v, ...p]); setCurrentVideoId(v.id); }} onAddManualVideo={handleManualAdd} onMoveVideo={() => {}} onPurgeAll={handlePurgeAll} activeTab={playlistTab} setActiveTab={setPlaylistTab} isAuthorized={isAuthorized} onAddCategory={handleAddCategory} onRemoveCategory={handleRemoveCategory} onUpdateCategoryColor={() => {}} />
         </aside>
 
@@ -369,7 +376,7 @@ const App: React.FC = () => {
             <div className="px-8 w-full" ref={playerContainerRef}>
                <div className="w-full max-h-[calc(100vh-240px)] aspect-video bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl relative mx-auto">
                 {currentVideo ? (
-                  <VideoPlayer key={currentVideo.id} video={currentVideo} isFavorite={currentUserFavorites.includes(currentVideo.id)} isPlaying={isPlaying} onPlayStateChange={setIsPlaying} onToggleLike={() => handleToggleLike(currentVideo.id)} onToggleDislike={() => handleToggleDislike(currentVideo.id)} onToggleFavorite={() => handleToggleFavorite(currentVideo.id)} onViewIncrement={() => handleIncrementView(currentVideo.id)} onWriteReview={() => { setReviewInitialTab('Write'); setActiveSecondaryView('reviews'); }} />
+                  <VideoPlayer key={currentVideo.id} video={currentVideo} isFavorite={currentUserFavorites.includes(currentVideo.id)} isPlaying={isPlaying} onPlayStateChange={setIsPlaying} onToggleLike={() => handleToggleLike(currentVideo.id)} onToggleDislike={() => handleToggleDislike(currentVideo.id)} onToggleFavorite={() => handleToggleFavorite(currentVideo.id)} onWriteReview={() => { setReviewInitialTab('Write'); setActiveSecondaryView('reviews'); }} />
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-slate-600 uppercase font-black text-xs gap-4 bg-slate-950"><i className="fa-solid fa-cloud fa-3x animate-pulse text-slate-900"></i> Select Video</div>
                 )}
@@ -392,7 +399,7 @@ const App: React.FC = () => {
             )}
             <div className="px-8 w-full mt-4 pb-20">
               {activeSecondaryView === 'moderation' && (
-                <ModerationPanel videos={videos} categories={categories} categoryColors={categoryColors} onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))} onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))} onAddVideo={handleManualAdd} onRemoveVideo={handleRemoveVideo} onResetStats={() => {}} onClearCategories={() => {}} onClose={() => setActiveSecondaryView('none')} onSimulateSync={triggerSyncSequence} isCheckingSync={isCheckingSync} cloudVersion={cloudVersion} onCheckVersion={() => checkVersion(true)} onHardSync={handleHardSyncSource} currentUser={currentUser} />
+                <ModerationPanel videos={videos} categories={categories} categoryColors={categoryColors} onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))} onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))} onAddVideo={handleManualAdd} onRemoveVideo={handleRemoveVideo} onResetStats={() => {}} onClearCategories={() => {}} onClose={() => setActiveSecondaryView('none')} onSimulateSync={triggerSyncSequence} isCheckingSync={isCheckingSync} cloudVersion={cloudVersion} onCheckVersion={() => checkVersion(true)} onHardSync={handleHardSyncSource} currentUser={currentUser} currentFavorites={currentUserFavorites} />
               )}
               {activeSecondaryView === 'vault' && (
                 <VaultGallery videos={videos.filter(v => currentUserFavorites.includes(v.id))} categoryColors={categoryColors} currentVideo={currentVideo!} onSelect={(v) => { setCurrentVideoId(v.id); setActiveSecondaryView('none'); }} onRemove={handleRemoveVideo} onToggleFavorite={handleToggleFavorite} isOpen={true} onClose={() => setActiveSecondaryView('none')} isAuthorized={isAuthorized} onMoveVideo={() => {}} currentUser={currentUser} />
