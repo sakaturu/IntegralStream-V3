@@ -54,11 +54,11 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
 
   return (
     <div className="w-full animate-fade-in mt-4">
-      <div className="bg-[#0f172a]/80 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-red-500/20 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] relative overflow-hidden ring-1 ring-red-500/10">
+      <div className="bg-[#0f172a]/80 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-blue-500/20 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] relative overflow-hidden ring-1 ring-blue-500/10">
         <div className="flex items-center justify-between mb-8">
           <div className="flex flex-col">
-            <h3 className="text-[13px] font-black text-red-500 uppercase tracking-[0.2em] flex items-center gap-2">
-              <i className="fa-solid fa-vault"></i>
+            <h3 className="text-[13px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              <i className="fa-solid fa-vault text-blue-600"></i>
               {currentUser.replace(/_/g, ' ')}'S ARCHIVE
             </h3>
             <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-1 pl-6">Secure Neural Persona Data</p>
@@ -90,11 +90,11 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
                     : 'bg-transparent border-transparent hover:bg-white/5'
                   }`}
                 >
-                  <div className={`w-24 h-14 rounded-xl bg-slate-900 flex-shrink-0 overflow-hidden relative shadow-2xl border transition-all duration-500 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1 group-hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.6)] ${currentVideo?.id === video.id ? 'border-red-500/30' : 'border-white/5'}`}>
+                  <div className={`w-24 h-14 rounded-xl bg-slate-900 flex-shrink-0 overflow-hidden relative shadow-2xl border transition-all duration-500 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1 group-hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.6)] ${currentVideo?.id === video.id ? 'border-blue-500/30' : 'border-white/5'}`}>
                     <img src={getThumbnailUrl(video)} className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" alt="" />
-                    <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${currentVideo?.id === video.id ? 'bg-red-600/30' : 'bg-black/0 group-hover:bg-black/20'}`}>
+                    <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${currentVideo?.id === video.id ? 'bg-blue-600/30' : 'bg-black/0 group-hover:bg-black/20'}`}>
                       <div className={`w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg transition-transform duration-300 ${currentVideo?.id === video.id ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}>
-                        <i className="fa-solid fa-play text-red-600 text-[10px] ml-0.5"></i>
+                        <i className="fa-solid fa-play text-blue-600 text-[10px] ml-0.5"></i>
                       </div>
                     </div>
                   </div>
@@ -112,11 +112,11 @@ const VaultGallery: React.FC<VaultGalleryProps> = ({
                         {video.category}
                       </span>
 
-                      <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest shrink-0 border-l border-white/10 pl-2">
+                      <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest shrink-0 border-l border-white/10 pl-2 overflow-x-auto custom-scrollbar no-scrollbar">
                         <span className="text-orange-500 flex items-center gap-1 shrink-0">
                           Views:: <span className="text-slate-300 text-[12px]">{video.viewCount.toLocaleString()}</span>
                         </span>
-                        <span className="text-red-500 flex items-center gap-1 shrink-0">
+                        <span className="text-blue-500 flex items-center gap-1 shrink-0">
                           Likes:: <span className="text-slate-300 text-[12px]">{video.likeCount.toLocaleString()}</span>
                         </span>
                       </div>

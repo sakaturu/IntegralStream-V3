@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { VideoItem, VideoCategory } from './types';
 import VideoPlayer from './components/VideoPlayer';
@@ -13,10 +14,10 @@ const VERSION_KEY = `integral_version_v${LIBRARY_VERSION}`;
 const AUTH_KEY = 'integral_v411_auth';
 const CAT_KEY = `integral_categories_v${LIBRARY_VERSION}`;
 const CAT_COLORS_KEY = `integral_cat_colors_v${LIBRARY_VERSION}`;
-const USER_KEY = 'integral_active_user_v7'; 
-const USER_LOCKED_KEY = 'integral_user_locked_v7';
+const USER_KEY = 'integral_active_user_v5'; 
+const USER_LOCKED_KEY = 'integral_user_locked_v5';
 const USER_NODE_ID_KEY = 'integral_user_node_id';
-const FAV_MAP_KEY = 'integral_user_fav_map_v3'; // Incremented for fresh persistence
+const FAV_MAP_KEY = 'integral_user_fav_map';
 const ADMIN_PASSWORD = 'ADMIN';
 
 const generateNodeId = () => {
@@ -40,15 +41,16 @@ const DEFAULT_CATEGORIES: VideoCategory[] = [
   'Other'
 ];
 
+// Brighter "Neon" Default Palette
 const DEFAULT_CAT_COLORS: Record<string, string> = {
-  'Meditation': '#10b981', 
-  'Tribal': '#f97316',     
-  'Dance': '#d946ef',     
-  'Integral Serenity': '#3b82f6', 
-  'Permia Community': '#fbbf24', 
-  'Spanish': '#8b5cf6',   
-  'Fav. Pick': '#ec4899', 
-  'Environment': '#22c55e', 
+  'Meditation': '#10b981', // Neon Emerald
+  'Tribal': '#f97316',     // Bright Orange
+  'Dance': '#d946ef',     // Electric Magenta
+  'Integral Serenity': '#3b82f6', // Laser Blue
+  'Permia Community': '#fbbf24', // Solar Yellow
+  'Spanish': '#8b5cf6',   // Bright Purple
+  'Fav. Pick': '#ec4899', // Hot Pink
+  'Environment': '#22c55e', // Neon Green
   'Other': '#94a3b8'
 };
 
@@ -64,9 +66,18 @@ const IntegralLogo = () => (
 );
 
 const App: React.FC = () => {
-  const [isAuthorized, setIsAuthorized] = useState<boolean>(() => localStorage.getItem(AUTH_KEY) === 'true');
-  const [currentUser, setCurrentUser] = useState<string>(() => localStorage.getItem(USER_KEY) || MASTER_IDENTITY);
-  const [isUserLocked, setIsUserLocked] = useState<boolean>(() => localStorage.getItem(USER_LOCKED_KEY) === 'true');
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(() => {
+    return localStorage.getItem(AUTH_KEY) === 'true';
+  });
+  
+  const [currentUser, setCurrentUser] = useState<string>(() => {
+    return localStorage.getItem(USER_KEY) || MASTER_IDENTITY;
+  });
+  
+  const [isUserLocked, setIsUserLocked] = useState<boolean>(() => {
+    return localStorage.getItem(USER_LOCKED_KEY) === 'true';
+  });
+
   const [nodeId, setNodeId] = useState<string>(() => {
     const existing = localStorage.getItem(USER_NODE_ID_KEY);
     if (existing) return existing;
@@ -77,8 +88,7 @@ const App: React.FC = () => {
 
   const [userFavMap, setUserFavMap] = useState<Record<string, string[]>>(() => {
     const saved = localStorage.getItem(FAV_MAP_KEY);
-    const localMap = saved ? JSON.parse(saved) : {};
-    return { ...HARDCODED_FAVORITES, ...localMap };
+    return saved ? JSON.parse(saved) : HARDCODED_FAVORITES;
   });
 
   const [showLoginOverlay, setShowLoginOverlay] = useState(() => !localStorage.getItem(USER_KEY));
@@ -91,11 +101,13 @@ const App: React.FC = () => {
   const [cloudVersion, setCloudVersion] = useState<number>(LIBRARY_VERSION);
   
   const playerContainerRef = useRef<HTMLDivElement>(null);
+  const checkSyncLock = useRef(false);
 
   useEffect(() => {
     localStorage.setItem(USER_KEY, currentUser);
     localStorage.setItem(USER_LOCKED_KEY, isUserLocked ? 'true' : 'false');
-  }, [currentUser, isUserLocked]);
+    localStorage.setItem(USER_NODE_ID_KEY, nodeId);
+  }, [currentUser, isUserLocked, nodeId]);
 
   useEffect(() => {
     localStorage.setItem(FAV_MAP_KEY, JSON.stringify(userFavMap));
@@ -147,15 +159,35 @@ const App: React.FC = () => {
 
   const triggerReload = useCallback(() => { window.location.reload(); }, []);
   const triggerSyncSequence = useCallback(() => { setIsSyncingLive(true); setTimeout(triggerReload, 1500); }, [triggerReload]);
-  const handleHardSyncSource = useCallback(() => { 
-    setIsSyncingLive(true); 
-    localStorage.removeItem(DATA_KEY); 
-    localStorage.removeItem(CAT_KEY); 
-    localStorage.removeItem(CAT_COLORS_KEY); 
-    localStorage.removeItem(VERSION_KEY); 
-    localStorage.removeItem(FAV_MAP_KEY); 
-    setTimeout(triggerReload, 2000); 
-  }, [triggerReload]);
+  const handleHardSyncSource = useCallback(() => { setIsSyncingLive(true); localStorage.removeItem(DATA_KEY); localStorage.removeItem(CAT_KEY); localStorage.removeItem(CAT_COLORS_KEY); localStorage.removeItem(VERSION_KEY); localStorage.removeItem(FAV_MAP_KEY); setTimeout(triggerReload, 2000); }, [triggerReload]);
+
+  const checkVersion = useCallback(async (manual = false) => {
+    if (checkSyncLock.current) return;
+    checkSyncLock.current = true;
+    setIsCheckingSync(true);
+    try {
+      const response = await fetch(`./index.html?cb=${Date.now()}`, { cache: 'no-store' });
+      if (response.ok) {
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const metaVersionStr = doc.querySelector('meta[name="version"]')?.getAttribute('content');
+        if (metaVersionStr) {
+          const metaVersion = parseInt(metaVersionStr, 10);
+          setCloudVersion(metaVersion);
+          if (metaVersion > LIBRARY_VERSION) triggerSyncSequence();
+        }
+      }
+    } catch (e) {} finally {
+      setIsCheckingSync(false);
+      checkSyncLock.current = false;
+    }
+  }, [triggerSyncSequence]);
+
+  useEffect(() => {
+    checkVersion(false);
+    const interval = setInterval(() => checkVersion(false), 60000);
+    return () => clearInterval(interval);
+  }, [checkVersion]);
 
   const [categories, setCategories] = useState<VideoCategory[]>(() => {
     const saved = localStorage.getItem(CAT_KEY);
@@ -169,13 +201,23 @@ const App: React.FC = () => {
 
   const [videos, setVideos] = useState<VideoItem[]>(() => {
     const currentSource = getSampleLibrary();
+    const currentSourceMap = new Map(currentSource.map(v => [v.url, v]));
     const savedDataStr = localStorage.getItem(DATA_KEY);
     const savedVersion = localStorage.getItem(VERSION_KEY);
     const isOldVersion = !savedVersion || parseInt(savedVersion, 10) < LIBRARY_VERSION;
+
     if (!savedDataStr || isOldVersion) return currentSource;
+    
     try {
       const baseData: VideoItem[] = JSON.parse(savedDataStr);
-      return baseData;
+      const syncedData = baseData.map(lv => {
+        const sv = currentSourceMap.get(lv.url);
+        if (sv) return { ...sv, id: lv.id, viewCount: lv.viewCount, likeCount: lv.likeCount, dislikeCount: lv.dislikeCount, reviews: lv.reviews || [] };
+        return lv;
+      });
+      const localUrls = new Set(syncedData.map(v => v.url));
+      const newItems = currentSource.filter(v => !localUrls.has(v.url));
+      return [...newItems, ...syncedData];
     } catch (e) { return currentSource; }
   });
 
@@ -184,15 +226,20 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(DATA_KEY, JSON.stringify(videos));
     localStorage.setItem(VERSION_KEY, LIBRARY_VERSION.toString());
+    localStorage.setItem(AUTH_KEY, isAuthorized ? 'true' : 'false');
     localStorage.setItem(CAT_KEY, JSON.stringify(categories));
     localStorage.setItem(CAT_COLORS_KEY, JSON.stringify(categoryColors));
-  }, [videos, categories, categoryColors]);
+  }, [videos, isAuthorized, categories, categoryColors]);
 
   const currentUserFavorites = useMemo(() => userFavMap[currentUser] || [], [userFavMap, currentUser]);
-  const vaultCount = useMemo(() => currentUserFavorites.length, [currentUserFavorites]);
+  const vaultCount = useMemo(() => vaultCountCount(currentUserFavorites), [currentUserFavorites]);
+  function vaultCountCount(favs: string[]) { return favs.length; }
 
+  // FIX: Calculate pendingReviewsCount to resolve the reference error in the header
   const pendingReviewsCount = useMemo(() => {
-    return videos.reduce((acc, video) => acc + (video.reviews?.filter(r => !r.isApproved).length || 0), 0);
+    return videos.reduce((acc, video) => {
+      return acc + (video.reviews?.filter(r => !r.isApproved).length || 0);
+    }, 0);
   }, [videos]);
 
   const handleRemoveVideo = useCallback((id: string) => {
@@ -222,9 +269,8 @@ const App: React.FC = () => {
   const handleToggleFavorite = useCallback((id: string) => {
     setUserFavMap(prev => {
       const userFavs = prev[currentUser] || [];
-      const updatedFavs = userFavs.includes(id) 
-        ? userFavs.filter(fid => fid !== id) 
-        : [...userFavs, id];
+      const isAlreadyFav = userFavs.includes(id);
+      const updatedFavs = isAlreadyFav ? userFavs.filter(fid => fid !== id) : [...userFavs, id];
       return { ...prev, [currentUser]: updatedFavs };
     });
   }, [currentUser]);
@@ -240,11 +286,19 @@ const App: React.FC = () => {
   const currentVideo = useMemo(() => videos.find(v => v.id === currentVideoId) || null, [videos, currentVideoId]);
 
   return (
-    <div className="h-screen bg-transparent text-slate-100 flex flex-col font-sans relative selection:bg-red-500/30 overflow-hidden">
+    <div className="h-screen bg-transparent text-slate-100 flex flex-col font-sans relative selection:bg-blue-500/30 overflow-hidden">
       {isSyncingLive && (
         <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center animate-fade-in backdrop-blur-3xl">
-           <div className="relative"><div className="w-24 h-24 border-4 border-red-500/10 border-t-red-500 rounded-full animate-spin"></div></div>
-           <h2 className="text-xl font-black uppercase tracking-[0.5em] text-white mt-10">Neural Sync</h2>
+           <div className="relative">
+             <div className="w-24 h-24 border-4 border-blue-500/10 border-t-blue-500 rounded-full animate-spin"></div>
+             <div className="absolute inset-0 flex items-center justify-center">
+               <i className="fa-brands fa-github text-blue-500 text-3xl animate-pulse"></i>
+             </div>
+           </div>
+           <div className="flex flex-col items-center mt-10">
+             <h2 className="text-xl font-black uppercase tracking-[0.5em] text-white">Neural Sync</h2>
+             <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-4 max-w-xs text-center leading-relaxed">Adjusting local matrix to source...</p>
+           </div>
         </div>
       )}
 
@@ -252,34 +306,56 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4 cursor-pointer" onClick={() => setActiveSecondaryView('none')}>
           <IntegralLogo />
           <div className="flex flex-col">
-            <h1 className="font-black text-xl uppercase tracking-tighter leading-none text-red-600">IntegralStream</h1>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Personalized Archive</p>
+            <h1 className="font-black text-xl uppercase tracking-tighter leading-none text-blue-600">IntegralStream</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Personalized Archive</p>
+            </div>
           </div>
         </div>
         
         <div className="flex gap-4 items-center">
-          <div 
-            onClick={() => isUserLocked ? handleLogout() : setShowLoginOverlay(true)}
-            className="px-4 h-11 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center gap-3 transition-all cursor-pointer hover:bg-red-600/20 group"
-          >
-            <div className="flex flex-col items-end">
-              <span className="text-[7px] font-black text-red-500/60 uppercase tracking-widest group-hover:text-white transition-colors">{isUserLocked ? 'Verified (Disconnect)' : 'Identify Persona'}</span>
-              <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">{currentUser}</span>
+          <div className="flex flex-col items-end relative group">
+            <div 
+              onClick={() => isUserLocked ? handleLogout() : setShowLoginOverlay(true)}
+              className={`px-4 h-11 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center gap-3 transition-all cursor-pointer hover:bg-blue-600/20`}
+            >
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1.5">
+                   {isUserLocked ? (
+                     <i className="fa-solid fa-lock text-[7px] text-blue-500/60 group-hover:hidden"></i>
+                   ) : currentUser === MASTER_IDENTITY ? (
+                     <i className="fa-solid fa-code text-[7px] text-blue-500"></i>
+                   ) : (
+                     <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
+                   )}
+                   {isUserLocked && <i className="fa-solid fa-arrow-right-from-bracket text-[7px] text-white hidden group-hover:inline-block"></i>}
+                   <span className="text-[7px] font-black text-blue-500/60 uppercase tracking-widest group-hover:text-white transition-colors">
+                    {isUserLocked ? 'Verified (Disconnect)' : 'Identified Persona'}
+                   </span>
+                </div>
+                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest group-hover:text-blue-400 transition-colors">{currentUser}</span>
+              </div>
+              <i className={`fa-solid ${isUserLocked ? 'fa-user-lock' : 'fa-id-badge'} text-blue-500 text-xs`}></i>
             </div>
-            <i className={`fa-solid ${isUserLocked ? 'fa-user-lock' : 'fa-id-badge'} text-red-500 text-xs`}></i>
           </div>
 
           {isAuthorized && (
             <button 
               onClick={() => setActiveSecondaryView(v => v === 'moderation' ? 'none' : 'moderation')}
-              className={`h-11 px-4 rounded-xl flex items-center gap-2 border transition-all relative font-black text-[10px] tracking-widest uppercase ${activeSecondaryView === 'moderation' ? 'bg-white text-black shadow-lg' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}
+              className={`h-11 px-4 rounded-xl flex items-center gap-2 border transition-all relative font-black text-[10px] tracking-widest uppercase ${activeSecondaryView === 'moderation' ? 'bg-white text-black shadow-lg' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:border-white/20'}`}
             >
               <i className="fa-solid fa-terminal text-base"></i>
               <span>Console</span>
+              {pendingReviewsCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full text-[10px] font-black flex items-center justify-center border-2 border-black shadow-lg">{pendingReviewsCount}</span>}
             </button>
           )}
 
-          <button onClick={() => isAuthorized ? setIsAuthorized(false) : setShowLoginOverlay(true)} className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all ${isAuthorized ? 'bg-red-600/10 border-red-500/20 text-red-500' : 'bg-white/5 border-white/10 text-slate-500'}`}><i className={`fa-solid ${isAuthorized ? 'fa-unlock' : 'fa-lock'}`}></i></button>
+          <button 
+            onClick={() => isAuthorized ? setIsAuthorized(false) : setShowLoginOverlay(true)} 
+            className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${isAuthorized ? 'bg-blue-600/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}`}
+          >
+            <i className={`fa-solid ${isAuthorized ? 'fa-unlock' : 'fa-lock'}`}></i>
+          </button>
         </div>
       </header>
 
@@ -290,28 +366,36 @@ const App: React.FC = () => {
 
         <section className="flex-1 flex flex-col bg-transparent overflow-y-auto min-w-0 custom-scrollbar">
           <div className="w-full flex flex-col pt-8 gap-0">
+            <div className="flex items-center justify-between px-8 mb-6">
+              <h2 className="text-blue-600 font-black uppercase text-[10px] tracking-[0.4em] flex items-center gap-3"><span className="w-1 h-4 bg-blue-600 rounded-full"></span>{currentVideo ? "Current Video Stream" : "Select Video"}</h2>
+            </div>
             <div className="px-8 w-full" ref={playerContainerRef}>
                <div className="w-full max-h-[calc(100vh-240px)] aspect-video bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl relative mx-auto">
                 {currentVideo ? (
                   <VideoPlayer key={currentVideo.id} video={currentVideo} isFavorite={currentUserFavorites.includes(currentVideo.id)} isPlaying={isPlaying} onPlayStateChange={setIsPlaying} onToggleLike={() => handleToggleLike(currentVideo.id)} onToggleDislike={() => handleToggleDislike(currentVideo.id)} onToggleFavorite={() => handleToggleFavorite(currentVideo.id)} onWriteReview={() => { setReviewInitialTab('Write'); setActiveSecondaryView('reviews'); }} />
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-slate-600 uppercase font-black text-xs gap-4 bg-slate-950"><i className="fa-solid fa-cloud fa-3x animate-pulse"></i> Select Video</div>
+                  <div className="h-full flex flex-col items-center justify-center text-slate-600 uppercase font-black text-xs gap-4 bg-slate-950"><i className="fa-solid fa-cloud fa-3x animate-pulse text-slate-900"></i> Select Video</div>
                 )}
               </div>
             </div>
             {currentVideo && (
               <div className="w-full animate-fade-in mt-6 px-8">
                 <div className="bg-white/5 border border-white/5 rounded-3xl flex flex-wrap items-center justify-between px-8 py-4 w-full gap-4">
-                  <div className="flex items-center gap-6">
-                    <button onClick={() => { setReviewInitialTab('Read'); setActiveSecondaryView('reviews'); }} className="text-[10px] font-black uppercase tracking-widest text-purple-400 hover:text-purple-300 flex items-center gap-2 transition-colors"><i className="fa-solid fa-message"></i><span>Reviews::</span><span className="text-[13px] font-black text-white ml-0.5">{(currentVideo.reviews?.length || 0).toLocaleString()}</span></button>
-                    <button onClick={() => setActiveSecondaryView(v => v === 'vault' ? 'none' : 'vault')} className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 flex items-center gap-2 transition-colors"><i className="fa-solid fa-vault"></i><span>{currentUser.replace(/_/g, ' ')}'S VAULT::</span><span className="text-[13px] font-black text-white ml-0.5">{vaultCount.toLocaleString()}</span></button>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className="px-3 py-1 border text-[10px] font-black uppercase rounded-full tracking-widest shrink-0" style={{ color: categoryColors[currentVideo.category], borderColor: `${categoryColors[currentVideo.category]}60`, background: `${categoryColors[currentVideo.category]}20` }}>{currentVideo.category}</span>
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2"><span className="text-[10px] font-black text-orange-400 uppercase tracking-widest">Views::</span><span className="text-[13px] font-black text-white">{currentVideo.viewCount.toLocaleString()}</span></div>
+                      <div className="flex items-center gap-2"><span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Likes::</span><span className="text-[13px] font-black text-white">{currentVideo.likeCount.toLocaleString()}</span></div>
+                      <button onClick={() => { setReviewInitialTab('Read'); setActiveSecondaryView('reviews'); }} className="text-[10px] font-black uppercase tracking-widest text-purple-400 hover:text-purple-300 flex items-center gap-2 transition-colors"><i className="fa-solid fa-message text-[11px]"></i><span>Reviews::</span><span className="text-[13px] font-black text-white ml-0.5">{(currentVideo.reviews?.length || 0).toLocaleString()}</span></button>
+                      <button onClick={() => setActiveSecondaryView(v => v === 'vault' ? 'none' : 'vault')} className="text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 flex items-center gap-2 transition-colors"><i className="fa-solid fa-vault text-[11px]"></i><span>{currentUser.replace(/_/g, ' ')}'S VAULT::</span><span className="text-[13px] font-black text-white ml-0.5">{vaultCount.toLocaleString()}</span></button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
             <div className="px-8 w-full mt-4 pb-20">
               {activeSecondaryView === 'moderation' && (
-                <ModerationPanel videos={videos} categories={categories} categoryColors={categoryColors} onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))} onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))} onAddVideo={handleManualAdd} onRemoveVideo={handleRemoveVideo} onResetStats={() => {}} onClearCategories={() => {}} onClose={() => setActiveSecondaryView('none')} onSimulateSync={triggerSyncSequence} isCheckingSync={isCheckingSync} cloudVersion={cloudVersion} onCheckVersion={() => {}} onHardSync={handleHardSyncSource} currentUser={currentUser} userFavMap={userFavMap} />
+                <ModerationPanel videos={videos} categories={categories} categoryColors={categoryColors} onApprove={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.map(r => r.id === revId ? {...r, isApproved: true} : r)} : v))} onReject={(vidId, revId) => setVideos(p => p.map(v => v.id === vidId ? {...v, reviews: v.reviews?.filter(r => r.id !== revId)} : v))} onAddVideo={handleManualAdd} onRemoveVideo={handleRemoveVideo} onResetStats={() => {}} onClearCategories={() => {}} onClose={() => setActiveSecondaryView('none')} onSimulateSync={triggerSyncSequence} isCheckingSync={isCheckingSync} cloudVersion={cloudVersion} onCheckVersion={() => checkVersion(true)} onHardSync={handleHardSyncSource} currentUser={currentUser} userFavMap={userFavMap} />
               )}
               {activeSecondaryView === 'vault' && (
                 <VaultGallery videos={videos.filter(v => currentUserFavorites.includes(v.id))} categoryColors={categoryColors} currentVideo={currentVideo!} onSelect={(v) => { setCurrentVideoId(v.id); setActiveSecondaryView('none'); }} onRemove={handleRemoveVideo} onToggleFavorite={handleToggleFavorite} isOpen={true} onClose={() => setActiveSecondaryView('none')} isAuthorized={isAuthorized} onMoveVideo={() => {}} currentUser={currentUser} />
@@ -326,7 +410,14 @@ const App: React.FC = () => {
 
       {showLoginOverlay && (
         <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 backdrop-blur-3xl">
-          <LoginGate onLogin={handleAdminLogin} onIdentify={handleIdentify} onRestore={handleRestoreNode} isIdentityLocked={isUserLocked} onClose={() => isUserLocked && setShowLoginOverlay(false)} defaultName={currentUser !== MASTER_IDENTITY ? currentUser : ''} />
+          <LoginGate 
+            onLogin={handleAdminLogin} 
+            onIdentify={handleIdentify}
+            onRestore={handleRestoreNode} 
+            isIdentityLocked={isUserLocked}
+            onClose={() => isUserLocked && setShowLoginOverlay(false)} 
+            defaultName={currentUser !== MASTER_IDENTITY ? currentUser : ''}
+          />
         </div>
       )}
     </div>

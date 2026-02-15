@@ -152,7 +152,7 @@ const Playlist: React.FC<PlaylistProps> = ({
 
   const getTabThematicColor = (tabName: string) => {
     if (tabName === 'All') return '#f8fafc';
-    if (tabName === 'Vault') return '#ff3b3b'; // Strict Red
+    if (tabName === 'Vault') return '#ff3b3b';
     return categoryColors[tabName] || '#cbd5e1';
   };
 
@@ -162,7 +162,7 @@ const Playlist: React.FC<PlaylistProps> = ({
     if (isActive) {
       return { color: color, backgroundColor: `${color}25`, borderColor: `${color}50`, transform: 'scale(1.02)' };
     }
-    return { color: tabName === 'Vault' ? '#ff3b3b90' : `${color}90`, borderColor: 'transparent', backgroundColor: 'transparent' };
+    return { color: `${color}90`, borderColor: 'transparent', backgroundColor: 'transparent' };
   };
 
   const renderTab = (tab: { name: string }) => {
@@ -192,8 +192,8 @@ const Playlist: React.FC<PlaylistProps> = ({
     <div className="flex flex-col h-full relative bg-transparent">
       <div className="flex-none pb-4 z-20 px-4 pt-6">
         <div className="flex items-center justify-between mb-4 px-1">
-          <h3 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+          <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
             Library Matrix
           </h3>
           <div className="flex items-center gap-4">
@@ -209,7 +209,7 @@ const Playlist: React.FC<PlaylistProps> = ({
               <button 
                 onClick={() => setShowAddForm(!showAddForm)}
                 className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shadow-lg z-30 ${
-                  showAddForm ? 'bg-red-500/10 text-red-500 border-red-500/20 rotate-45' : 'bg-white text-black border-white hover:bg-slate-100'
+                  showAddForm ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 rotate-45' : 'bg-white text-black border-white hover:bg-slate-100'
                 }`}
               >
                 <i className="fa-solid fa-plus text-xs"></i>
@@ -232,6 +232,46 @@ const Playlist: React.FC<PlaylistProps> = ({
               </div>
             </div>
           </div>
+
+          {isAuthorized && showAddForm && (
+            <div className="animate-fade-in bg-slate-900/90 border border-white/10 rounded-2xl p-6 mt-2 shadow-2xl space-y-4">
+              <div className="flex flex-col gap-2">
+                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Manual Injection</h4>
+                {!isAddingCategoryInline && (
+                  <button type="button" onClick={() => setIsAddingCategoryInline(true)} className="w-full h-8 rounded-lg bg-white/5 border border-dashed border-white/10 flex items-center justify-center gap-2 text-slate-500 hover:bg-white/10 hover:text-white transition-all">
+                    <span className="text-[8px] font-black uppercase tracking-widest">Add Category</span>
+                  </button>
+                )}
+              </div>
+              {isAddingCategoryInline && (
+                <form onSubmit={handleAddCategoryInline} className="space-y-3 p-3 bg-black/40 rounded-xl border border-white/5">
+                  <input autoFocus type="text" placeholder="Cat Name..." value={inlineCategoryName} onChange={(e) => setInlineCategoryName(e.target.value)} className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:outline-none" />
+                  <div className="flex gap-1.5 flex-wrap justify-center">
+                    {COLOR_PALETTE.flat().map(color => (
+                      <button key={color} type="button" onClick={() => setSelectedColor(color)} className={`w-3 h-3 rounded-full border transition-all ${selectedColor === color ? 'border-white scale-125 shadow-[0_0_8px_white]' : 'border-transparent opacity-40'}`} style={{ backgroundColor: color }} />
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setIsAddingCategoryInline(false)} className="flex-1 text-[8px] font-black uppercase text-slate-600">Cancel</button>
+                    <button type="submit" className="flex-1 py-1.5 bg-blue-600 text-white rounded-lg text-[8px] font-black uppercase">Create</button>
+                  </div>
+                </form>
+              )}
+              <form onSubmit={handleInlineSubmit} className="space-y-4">
+                <input required type="text" placeholder="URL..." value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-[10px] text-white focus:outline-none focus:border-white/20" />
+                <input type="text" placeholder="Title..." value={newPrompt} onChange={(e) => setNewPrompt(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-[10px] text-white focus:outline-none focus:border-white/20" />
+                <div className="flex flex-wrap gap-1">
+                  {categories.map(cat => (
+                    <button key={cat} type="button" onClick={() => setNewCat(cat)} className={`px-2 py-1 rounded-md border text-[8px] font-black uppercase transition-all ${newCat === cat ? 'bg-white border-white text-black' : 'bg-white/5 border-white/5 text-slate-500'}`}>{cat}</button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={resetForm} className="flex-1 bg-white/5 border border-white/10 text-slate-500 py-3 rounded-xl text-[9px] font-black uppercase">Abort</button>
+                  <button type="submit" disabled={!newUrl || !newCat} className="flex-1 py-3 bg-white text-black rounded-xl text-[9px] font-black uppercase shadow-lg disabled:opacity-30">Inject</button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
       
@@ -246,16 +286,30 @@ const Playlist: React.FC<PlaylistProps> = ({
           return (
             <div key={video.id} onClick={() => onSelect(video)} className={`group flex items-center gap-3 p-3 rounded-2xl transition-all cursor-pointer border relative animate-fade-in pr-10 ${currentVideo?.id === video.id ? 'bg-white/5 border-white/10 shadow-lg' : 'bg-transparent border-transparent hover:bg-white/5'}`}>
               <div className="absolute top-0 bottom-0 right-3 flex flex-col items-center justify-center gap-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={(e) => { e.stopPropagation(); handleShare(video); }} className={`transition-all hover:scale-125 ${shareSuccessId === video.id ? 'text-green-500' : 'text-slate-600 hover:text-white'}`}>
+                <button onClick={(e) => { e.stopPropagation(); handleShare(video); }} className={`transition-all hover:scale-125 ${shareSuccessId === video.id ? 'text-green-500' : 'text-slate-600 hover:text-white'}`} data-tooltip="Share Video">
                   <i className={`fa-solid ${shareSuccessId === video.id ? 'fa-check' : 'fa-link'} text-[11px]`}></i>
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.id); }} 
-                  className={`transition-all hover:scale-125 ${isFavorited ? 'text-[#ff3b3b] scale-110 drop-shadow-[0_0_8px_rgba(255,59,59,0.5)]' : 'text-slate-600 hover:text-white'}`}
+                  className={`transition-all hover:scale-125 ${isFavorited ? 'text-[#ff3b3b] scale-110' : 'text-slate-600 hover:text-white'}`}
                 >
                   <i className={`fa-${isFavorited ? 'solid' : 'regular'} fa-heart text-[11px]`}></i>
                 </button>
+                {isAuthorized && (
+                  <button onClick={(e) => { e.stopPropagation(); setConfirmingDeleteId(video.id); }} className="text-red-500 transition-all hover:scale-125" data-tooltip="Purge Video">
+                    <i className="fa-solid fa-trash-can text-[11px]"></i>
+                  </button>
+                )}
               </div>
+              {confirmingDeleteId === video.id && isAuthorized && (
+                <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-md rounded-2xl flex items-center justify-between px-6 border border-red-500/20" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Delete Video?</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => setConfirmingDeleteId(null)} className="px-3 py-1 bg-white/5 rounded-lg text-[8px] font-black uppercase text-slate-400">Cancel</button>
+                    <button onClick={(e) => { e.stopPropagation(); onRemove(video.id); setConfirmingDeleteId(null); }} className="px-3 py-1 bg-red-600 text-white rounded-lg text-[8px] font-black uppercase">Destroy</button>
+                  </div>
+                </div>
+              )}
               <div className={`w-24 h-14 rounded-xl bg-slate-900 flex-shrink-0 overflow-hidden relative border ${currentVideo?.id === video.id ? 'border-white/20' : 'border-white/5'}`}>
                 <img src={getThumbnailUrl(video)} className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all" alt="" />
                 <div className={`absolute inset-0 flex items-center justify-center ${currentVideo?.id === video.id ? 'bg-white/10' : 'bg-transparent'}`}>
@@ -271,7 +325,7 @@ const Playlist: React.FC<PlaylistProps> = ({
                     <span className="text-white">{formatCount(video.viewCount)}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-red-500">Likes::</span>
+                    <span className="text-blue-500">Likes::</span>
                     <span className="text-white">{formatCount(video.likeCount)}</span>
                   </div>
                 </div>
