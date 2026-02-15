@@ -166,7 +166,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <div className="w-full h-full relative">
             {isSyncing && (
               <div className="absolute inset-0 z-30 bg-black flex flex-col items-center justify-center gap-4">
-                <div className="w-8 h-8 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-2 border-white/10 border-t-red-500 rounded-full animate-spin"></div>
               </div>
             )}
             <iframe ref={iframeRef} width="100%" height="100%" src={youtubeUrl} frameBorder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" className="w-full h-full pointer-events-none"></iframe>
